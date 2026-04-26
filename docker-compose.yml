@@ -41,7 +41,9 @@ services:
     environment:
       # All three services point at host.docker.internal because they're
       # running on the host OS, not in the docker network.
-      DATABASE_URL: "${DATABASE_URL:-postgresql+psycopg2://leasegenie:leasegenie@host.docker.internal:5432/leasegenie}"
+      # DATABASE_URL is REQUIRED — no fallback, so a missing .env fails fast
+      # rather than silently running with predictable creds.
+      DATABASE_URL: "${DATABASE_URL:?DATABASE_URL must be set in .env}"
       CELERY_BROKER_URL: "${CELERY_BROKER_URL:-redis://host.docker.internal:6379/0}"
       CELERY_RESULT_BACKEND: "${CELERY_RESULT_BACKEND:-redis://host.docker.internal:6379/1}"
       CELERY_TASK_ALWAYS_EAGER: "false"
@@ -49,6 +51,8 @@ services:
       OLLAMA_MODEL: "${OLLAMA_MODEL:-qwen2.5:14b-instruct-q5_K_M}"
       OLLAMA_EMBED_MODEL: "${OLLAMA_EMBED_MODEL:-nomic-embed-text}"
       OLLAMA_EMBED_DIM: "${OLLAMA_EMBED_DIM:-768}"
+      DEBUG: "${DEBUG:-false}"
+      CORS_ALLOW_ORIGINS: "${CORS_ALLOW_ORIGINS:-[\"http://localhost:3000\"]}"
       UPLOAD_DIR: /data/uploads
       EXPORT_DIR: /data/exports
       MAX_UPLOAD_SIZE_MB: "${MAX_UPLOAD_SIZE_MB:-100}"
@@ -83,7 +87,7 @@ services:
       api:
         condition: service_started
     environment:
-      DATABASE_URL: "${DATABASE_URL:-postgresql+psycopg2://leasegenie:leasegenie@host.docker.internal:5432/leasegenie}"
+      DATABASE_URL: "${DATABASE_URL:?DATABASE_URL must be set in .env}"
       CELERY_BROKER_URL: "${CELERY_BROKER_URL:-redis://host.docker.internal:6379/0}"
       CELERY_RESULT_BACKEND: "${CELERY_RESULT_BACKEND:-redis://host.docker.internal:6379/1}"
       CELERY_TASK_ALWAYS_EAGER: "false"
@@ -91,6 +95,7 @@ services:
       OLLAMA_MODEL: "${OLLAMA_MODEL:-qwen2.5:14b-instruct-q5_K_M}"
       OLLAMA_EMBED_MODEL: "${OLLAMA_EMBED_MODEL:-nomic-embed-text}"
       OLLAMA_EMBED_DIM: "${OLLAMA_EMBED_DIM:-768}"
+      DEBUG: "${DEBUG:-false}"
       UPLOAD_DIR: /data/uploads
       EXPORT_DIR: /data/exports
     volumes:
