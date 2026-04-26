@@ -1,0 +1,32 @@
+flowchart TD
+    User([Client / UI]) -->|POST /api/v1/orders| API[FastAPI router<br/>orders.create_order]
+
+    API --> ValidateBody[Pydantic validation<br/>OrderCreate schema]
+    ValidateBody -->|invalid| Err422[422 Unprocessable<br/>Entity]
+    ValidateBody -->|valid| CreateProject[Create Project row<br/>UUID id, name, created_at]
+
+    CreateProject --> LoopProps{For each<br/>PropertyIn}
+    LoopProps -->|next| CreateProp[Create Property row<br/>project_id FK,<br/>name, property_type<br/>Retail/Industrial/Office/Mixed]
+
+    CreateProp --> ValidatePropType{property_type<br/>valid?}
+    ValidatePropType -->|no| Err400[400 Bad Request]
+    ValidatePropType -->|yes| LoopTenants{For each<br/>TenantIn}
+
+    LoopTenants -->|next| CreateTenant[Create Tenant row<br/>property_id FK,<br/>name, suite_number,<br/>abstract_type]
+
+    CreateTenant --> ValidateAbstract{abstract_type<br/>in 5 allowed?}
+    ValidateAbstract -->|no| Err400
+    ValidateAbstract -->|yes| LoopTenants
+
+    LoopTenants -->|done| LoopProps
+    LoopProps -->|all processed| Commit[db.commit<br/>Cascade: Project →<br/>Properties → Tenants]
+
+    Commit --> Serialize[OrderOut.model_validate<br/>Return full tree with<br/>generated UUIDs]
+
+    Serialize -->|201 Created| Response([{<br/>  id: project-uuid,<br/>  properties: [{<br/>    tenants: [{id, ...}]<br/>  }]<br/>}])
+
+    style User fill:#2d6cdf,color:#fff
+    style Response fill:#2ea043,color:#fff
+    style Err422 fill:#dc2626,color:#fff
+    style Err400 fill:#dc2626,color:#fff
+    style Commit fill:#a855f7,color:#fff

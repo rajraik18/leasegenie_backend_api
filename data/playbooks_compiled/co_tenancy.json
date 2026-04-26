@@ -1,0 +1,84 @@
+{
+  "field_id": "co_tenancy",
+  "field_name": "Co-Tenancy",
+  "category": "Critical Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": false,
+    "Office": false,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+  "overview": "A co-tenancy clause in a commercial retail lease permits a tenant to reduce rent or terminate their lease if specific \"anchor\" tenants leave or if overall center occupancy drops below a set threshold.",
+  "preliminary": [
+    "CRITICAL LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "(Continuous Operation | Contraction Option| Co-Tenancy| Exclusive Use| Go-Dark| Landlord\u2019s Recapture Rights | Permitted Use| Purchase Option| Relocation | Renewal Rights | Right of Expansion | ROFO | ROFR| Sales Kick-Out| Tenant Termination | Landlord Termination)",
+    "Summary",
+    "Definitions",
+    "Continuous Operation",
+    "Contraction Option",
+    "Co-Tenancy",
+    "Exclusive Use",
+    "Go-Dark",
+    "Landlord's Recapture Rights",
+    "Permitted Use",
+    "Purchase Option",
+    "Relocation",
+    "Renewal Options",
+    "Right of Expansion",
+    "ROFO",
+    "ROFR",
+    "Sales Kick-Out",
+    "Tenant Termination",
+    "Landlord Termination",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Trigger",
+      "question_text": "Does the lease contain any clause that refers to Co-Tenancy keywords?",
+      "extraction_hint": "Trigger clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Operating Standards",
+    "Operating Co-Tenancy",
+    "Operating Failure",
+    "Substitute Rent",
+    "Suitable Replacement",
+    "Ongoing Co-Tenancy",
+    "Operating covenants",
+    "Alternate rent",
+    "Co-Tenants",
+    "Co-tenancy failure",
+    "Small Shop Operating",
+    "Anchor Failure",
+    "Occupancy Rate",
+    "Occupancy Threshold"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

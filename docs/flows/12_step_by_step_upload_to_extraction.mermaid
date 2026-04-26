@@ -1,0 +1,63 @@
+flowchart TD
+    Start([User has lease PDF<br/>e.g. Sample_1.pdf]) --> Step1
+
+    Step1[STEP 1 — Upload the PDF<br/>────────────────<br/>POST /api/v1/extract/pdf<br/>multipart: files=Sample_1.pdf<br/>query: property_type=Industrial<br/>       abstract_type=Full Abstract<br/>       tenant_name=Advance Stores]
+
+    Step1 --> Step2[STEP 2 — API validates + creates hierarchy<br/>────────────────<br/>• Validate property_type and abstract_type<br/>• Auto-create Project → Property → Tenant<br/>• Write PDF to uploads/TENANT_ID/00_Sample_1.pdf<br/>• INSERT Document row, ocr_status=pending]
+
+    Step2 --> Step3[STEP 3 — Two background jobs queued<br/>────────────────<br/>• index_document_task — OCR + vector indexing<br/>• extract_tenant_task — the full extraction<br/><br/>API returns immediately:<br/>202 Accepted with job_id]
+
+    Step3 --> Fork1{Two jobs run<br/>in parallel}
+
+    Fork1 --> OCRA[STEP 4a — OCR for vector store<br/>────────────────<br/>pdfplumber extracts text per page<br/>Tesseract fallback if page has<br/>&lt; 30 chars of clean text<br/>Result: list of Clause objects<br/>each with page + clause_number + text]
+
+    Fork1 --> OCRB[STEP 4b — OCR for extraction<br/>────────────────<br/>Same OCR runs inside<br/>Coordinator.build_context<br/>Shares cached results when possible]
+
+    OCRA --> Embed[STEP 5 — Embed every clause<br/>────────────────<br/>For each clause:<br/>• Ollama /api/embeddings<br/>• Model: nomic-embed-text<br/>• Returns 768-dim vector<br/>Batched 32 at a time]
+
+    Embed --> VecStore[STEP 6 — Upsert to ChromaDB<br/>────────────────<br/>id: tenant_id:doc_id:clause_ref<br/>metadata: page, clause#, doc_label<br/>document: clause text<br/>embedding: 768-dim vector<br/><br/>ocr_status becomes 'indexed']
+
+    OCRB --> BM25[STEP 7 — Build BM25 index<br/>────────────────<br/>Lexical corpus across<br/>base lease + all amendments<br/>for keyword/literal search]
+
+    BM25 --> Dispatch[STEP 8 — Coordinator dispatches<br/>5 specialist agents<br/>────────────────<br/>In strict dependency order:<br/>1. BasicInfo  17 fields<br/>2. Financial  5 fields<br/>3. Reimbursement  17 fields<br/>4. Critical  16 fields<br/>5. Other  16 fields<br/><br/>Shared facts cache passes data<br/>between specialists]
+
+    VecStore -.vector store ready<br/>for semantic_search.-> Dispatch
+
+    Dispatch --> PerField[STEP 9 — For each field × each document<br/>────────────────<br/>Load the compiled playbook for the field<br/>Check property_type applicability:<br/>• Co-Tenancy gated to Retail only<br/>  → would be skipped for this industrial lease<br/>• Sample_1.pdf is industrial = Office rules]
+
+    PerField --> Walk[STEP 10 — Walk the playbook<br/>decision tree<br/>────────────────<br/>For each question:<br/>• Search clauses — BM25 then semantic<br/>• Ask LLM one YES/NO + extract question<br/>• Branch on answer:<br/>    GOTO Qn — jump to next question<br/>    EXTRACT — capture value + goto<br/>    FINALIZE — stop, we have answer<br/>    RECORD_LITERAL — No Recovery / undated<br/>    RECORD_NONE — nothing found<br/>    FLAG_REVIEW — human needed]
+
+    Walk --> Example[STEP 11 — Example: Annual Base Rent<br/>────────────────<br/>Q1: Summary page exists? → YES p.1 $8,882.60<br/>Q2: Summary has rent terms? → YES extract<br/>Q3: Body has base rent clauses? → YES p.3 §4<br/>Result: 8882.60 × 12 = 106,591.20 annual<br/>Confidence: 0.92<br/>Citation: p.1, header rent block]
+
+    Example --> PostProc[STEP 12 — Specialist post-processing<br/>────────────────<br/>Cross-field rules applied:<br/>• Lease Term derived if None from LCD+LED<br/>• Dates normalized to MM/DD/YYYY<br/>• Monthly×12 currency conversion<br/>• CAM 'No Recovery' propagates to dependents<br/>• Tenant/Landlord blank → needs_review flag]
+
+    PostProc --> Persist[STEP 13 — Persist each result<br/>────────────────<br/>UPSERT FieldValue: value, confidence,<br/>  page_number, clause_number, clause_text<br/>INSERT AuditLog: action=extract<br/>Update ExtractionJob progress]
+
+    Persist --> Loop{More fields?}
+    Loop -->|yes| PerField
+    Loop -->|no| Recon[STEP 14 — Reconciliation sweep<br/>────────────────<br/>Cross-document checks:<br/>• RSF mismatch<br/>• Suite conflict<br/>• LED &lt; LCD critical flag<br/>• Lease Term vs LED−LCD math<br/>• Rent changes across amendments<br/>• Tenant name variations<br/>• Low-confidence rollup<br/>• needs_review rollup<br/><br/>Each flag written to AuditLog]
+
+    Recon --> Complete[STEP 15 — Mark job complete<br/>────────────────<br/>ExtractionJob:<br/>  status = complete<br/>  progress = 100<br/>  finished_at = now]
+
+    Complete --> Poll[STEP 16 — Client polls for result<br/>────────────────<br/>GET /jobs/JOB_ID<br/>returns status + progress<br/>Client waits until status=complete]
+
+    Poll --> Result{format?}
+    Result -->|json| JSON[STEP 17a — JSON response<br/>────────────────<br/>GET /extract/jobs/JOB_ID/result?format=json<br/>Returns TenantAbstractionOut:<br/>• per-field values<br/>• per-document breakdown<br/>• concluded_value with confidence<br/>• source_document + page + clause<br/>• summary block]
+
+    Result -->|xlsx| XLSX[STEP 17b — Excel download<br/>────────────────<br/>GET /extract/jobs/JOB_ID/result?format=xlsx<br/>3-sheet workbook:<br/>• Summary sheet<br/>• Lease Abstraction grid 17 columns<br/>  with confidence band colouring<br/>• Red Flags sheet]
+
+    JSON --> End([Caller has extracted data])
+    XLSX --> End
+
+    style Start fill:#2d6cdf,color:#fff
+    style End fill:#2ea043,color:#fff
+    style Step1 fill:#2d6cdf,color:#fff
+    style Step3 fill:#fbbf24,color:#000
+    style Fork1 fill:#f97316,color:#fff
+    style Embed fill:#a855f7,color:#fff
+    style VecStore fill:#8b5cf6,color:#fff
+    style Walk fill:#a855f7,color:#fff
+    style Example fill:#06b6d4,color:#fff
+    style Recon fill:#f97316,color:#fff
+    style JSON fill:#2ea043,color:#fff
+    style XLSX fill:#2ea043,color:#fff

@@ -1,0 +1,109 @@
+{
+  "field_id": "estoppel_certificate",
+  "field_name": "Estoppel Certificate",
+  "category": "Other Lease Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "OTHER_LEASE_CLAUSES.docx",
+  "overview": "An estoppel certificate clause obligates Tenant to execute, upon Landlord's request, a certificate confirming key facts about the lease (e.g., commencement/expiration dates, rent paid to date, no existing defaults, no prepaid rent beyond one month). Estoppels are used by Landlord's lenders and prospective purchasers in financing and sale transactions. The clause typically specifies: (a) a response deadline (commonly 10-20 days), (b) the certificate contents, and (c) whether failure to deliver constitutes an Event of Default or deemed-approval.",
+  "preliminary": [
+    "OTHER LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "General Applicability: All leases (Office, Retail and Industrial).",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Definition Based",
+      "question_text": "Does the lease require Tenant to execute estoppel certificates upon Landlord's request?",
+      "extraction_hint": "Extract the full estoppel clause, including: (a) response deadline, (b) required contents, (c) consequence of failure to deliver (Event of Default? Deemed-approval?).",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [
+        "estoppel certificate",
+        "estoppel"
+      ],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "literal",
+        "goto": null,
+        "literal": "None",
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": "Common locations: Section 27.2 (HMBP-BCP), Paragraph 29 (ProLogis)."
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Period Based",
+      "question_text": "What is the response deadline (in days)?",
+      "extraction_hint": "Extract the response deadline and identify the cure consequence.",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [
+        "within",
+        "days following written notice",
+        "days of request"
+      ],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Estoppel Certificate",
+    "estoppel",
+    "execute and deliver",
+    "execute an estoppel",
+    "within ten (10) days",
+    "within twenty (20) days",
+    "ratifying this Lease",
+    "certifying",
+    "full force and effect",
+    "no defenses or offsets",
+    "lender or prospective lender",
+    "material inducement",
+    "deemed given",
+    "deemed to have accepted"
+  ],
+  "summary_keywords": [
+    "Estoppel Certificate",
+    "estoppel",
+    "execute and deliver",
+    "execute an estoppel",
+    "within ten (10) days",
+    "within twenty (20) days",
+    "ratifying this Lease",
+    "certifying"
+  ],
+  "amendment_controls": true,
+  "depends_on": []
+}

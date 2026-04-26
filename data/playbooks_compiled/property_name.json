@@ -1,0 +1,132 @@
+{
+  "field_id": "property_name",
+  "field_name": "Property name",
+  "category": "Basic Information",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "BASIC_INFORMATION.docx",
+  "overview": "The details of the building and the address usually form part of a larger paragraph. The information may typically be available part of a summary or part of certain sections containing citations. Abstracting this clause may require understanding the pattern within a certain paragraph in the lease. Property known as Building known as Office known as Part of industrial complex Shopping center known as Premises known as Located in premises more fully described Abstract the entire clause, the details should contain the complete address including look out for Street, Avenue, Road, Circle, Drive. The zip code is a 5 digit number and is presented continuously without space. Abstract all the details till the zip code",
+  "preliminary": [
+    "BASIC INFORMATION \u2013 MASTER ABSTRACTION GUIDE",
+    "(Building | Landlord Name| Tenant Name| Lease Guarantor| Suite| Lease Date | Property Name| Street Address| City| State)",
+    "General Applicability: All leases (Office, Retail and Industrial)",
+    "Summary",
+    "Definitions",
+    "Building section",
+    "Landlord Name section",
+    "Tenant Name section",
+    "Guarantor section",
+    "Suite Identification section",
+    "Guarantor section",
+    "Leased Premises section",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "",
+      "question_text": "Does the lease contain a summary page?",
+      "extraction_hint": null,
+      "output_type": "Text",
+      "search_scope": "summary",
+      "keywords": [],
+      "yes_branch": {
+        "type": "goto",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": false
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q3",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "",
+      "question_text": "Does the lease describe any of the Property name key words?",
+      "extraction_hint": null,
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": null,
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "",
+      "question_text": "Does the lease contain any of the following type of language?",
+      "extraction_hint": null,
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q4",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q4",
+      "priority": 4,
+      "condition_type": "",
+      "question_text": "Does the lease contain definition of premises?",
+      "extraction_hint": null,
+      "output_type": "Text",
+      "search_scope": "definitions",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": null,
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Property",
+    "Property name",
+    "Building",
+    "Building name",
+    "Project Complex",
+    "Premises located at",
+    "Located at",
+    "Situated at"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

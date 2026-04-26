@@ -1,0 +1,106 @@
+{
+  "field_id": "base_year",
+  "field_name": "Base Year",
+  "category": "Reimbursements",
+  "output_type": "Number",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "Questions.xlsx",
+  "overview": null,
+  "preliminary": [],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Explicit Date Mentioned",
+      "question_text": "If Base Year defined, extract base year",
+      "extraction_hint": "Extract Year",
+      "output_type": "Numeric",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Defined Term Reference",
+      "question_text": "If base year defined in escalation clause, extract language",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "Silent",
+      "question_text": "If no base year mentioned, record none",
+      "extraction_hint": "Record None",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Base Year",
+    "Base Expense",
+    "Base Imposition",
+    "Base Expenses",
+    "Base Taxes",
+    "Base Tax Year",
+    "Tenant's tax Year",
+    "Base Operating Year",
+    "Expense Stop/Base Year Stop",
+    "Base Amount",
+    "increases over base year"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

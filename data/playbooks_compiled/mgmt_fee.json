@@ -1,0 +1,175 @@
+{
+  "field_id": "mgmt_fee",
+  "field_name": "Mgmt. Fee",
+  "category": "Reimbursements",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "Questions.xlsx",
+  "overview": null,
+  "preliminary": [],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "No Payments",
+      "question_text": "Is tenant paying for Management fee? If No, extract \"No Recovery\"",
+      "extraction_hint": "Extract \"No Recovery\"",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Estimated Amount",
+      "question_text": "If estimated Mgmt. Fee amount mentioned in Summary, extract clause",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "Included in CAM",
+      "question_text": "If management fee included in CAM, extract clause",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q4",
+      "priority": 4,
+      "condition_type": "Percentage Stated",
+      "question_text": "If management fee % specified, extract %",
+      "extraction_hint": "Extract Percentage",
+      "output_type": "Numeric",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q5",
+      "priority": 5,
+      "condition_type": "Dollar Amount",
+      "question_text": "If management fee amount specified, extract amount",
+      "extraction_hint": "Extract Amount",
+      "output_type": "Currency",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q6",
+      "priority": 6,
+      "condition_type": "Silent",
+      "question_text": "If no management fee mentioned, record none",
+      "extraction_hint": "Record None",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Property Management Fee",
+    "Management Fee",
+    "Management cost",
+    "Managing costs",
+    "Management expenses",
+    "Costs of managing",
+    "Cost of managing",
+    "Managing"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

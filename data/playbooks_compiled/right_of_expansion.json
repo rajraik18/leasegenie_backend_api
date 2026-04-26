@@ -1,0 +1,73 @@
+{
+  "field_id": "right_of_expansion",
+  "field_name": "Right of Expansion",
+  "category": "Critical Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+  "overview": "A right to expansion in a commercial lease is\u00a0a negotiated provision allowing a tenant to lease additional, adjacent, or specifically designated space within the same property as their business grows.",
+  "preliminary": [
+    "CRITICAL LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "(Continuous Operation | Contraction Option| Co-Tenancy| Exclusive Use| Go-Dark| Landlord\u2019s Recapture Rights | Permitted Use| Purchase Option| Relocation | Renewal Rights | Right of Expansion | ROFO | ROFR| Sales Kick-Out| Tenant Termination | Landlord Termination)",
+    "Summary",
+    "Definitions",
+    "Continuous Operation",
+    "Contraction Option",
+    "Co-Tenancy",
+    "Exclusive Use",
+    "Go-Dark",
+    "Landlord's Recapture Rights",
+    "Permitted Use",
+    "Purchase Option",
+    "Relocation",
+    "Renewal Options",
+    "Right of Expansion",
+    "ROFO",
+    "ROFR",
+    "Sales Kick-Out",
+    "Tenant Termination",
+    "Landlord Termination",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Right Granted",
+      "question_text": "Does the lease contain any clause that refers to Right of Expansion keywords?",
+      "extraction_hint": "Expansion clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Option to Expand",
+    "Expansion Option",
+    "Additional Space"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

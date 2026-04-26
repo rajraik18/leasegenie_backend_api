@@ -1,0 +1,295 @@
+{
+  "field_id": "pro_rata",
+  "field_name": "Pro Rata %",
+  "category": "Reimbursements",
+  "output_type": "Number",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "Questions.xlsx",
+  "overview": null,
+  "preliminary": [],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Percentage Stated",
+      "question_text": "If tenant pro rata share specified, extract %",
+      "extraction_hint": "Extract Percentage",
+      "output_type": "Numeric",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Silent",
+      "question_text": "If no pro rata % mentioned, record none",
+      "extraction_hint": "Record None",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "PRS inclusions",
+      "question_text": "If Tenant is paying ProRata Share, extract what costs are included in ProRata Share",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q4",
+      "priority": 4,
+      "condition_type": "PRS exclusions",
+      "question_text": "If Tenant is paying ProRata Share, extract what costs are excluded in ProRata Share",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q5",
+      "priority": 5,
+      "condition_type": "T's share denominator",
+      "question_text": "If Tenant is paying ProRata Share, extract what is the denominator used  to calculate Tenant's Pro Rata Share",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q6",
+      "priority": 6,
+      "condition_type": "Anchor Tenant Definition",
+      "question_text": "How is Anchor Tenant defined?",
+      "extraction_hint": "Anchor Definition language",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q7",
+      "priority": 7,
+      "condition_type": "Minimum SF",
+      "question_text": "Is minimum SF specified for anchor? If Yes, extract language",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Number",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q8",
+      "priority": 8,
+      "condition_type": "Named Anchor Tenant",
+      "question_text": "Is specific tenant named as anchor? If Yes, extract language",
+      "extraction_hint": "Anchor Tenant name",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q9",
+      "priority": 9,
+      "condition_type": "Major Tenant Definition",
+      "question_text": "How is Major Tenant defined?",
+      "extraction_hint": "Major Tenant Definition language",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q10",
+      "priority": 10,
+      "condition_type": "Named Major Tenant",
+      "question_text": "Is specific tenant designated as major tenant?",
+      "extraction_hint": "Major Tenant name",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Pro Rata share",
+    "Tenant's Proportionate Share of Building",
+    "Tenant's Proportionate Share of Project",
+    "Tenant's Proportionate Share",
+    "Tenant\u2019s Proportionate Share of Operating Expenses",
+    "T's Share",
+    "Tenant's Share",
+    "Premises Percentage",
+    "Building Expense Percentage",
+    "Tenant's Tax Share",
+    "Tenant Contribution",
+    "Tenant's Contribution",
+    "Expense Percentage",
+    "Share",
+    "Fraction",
+    "Tenant's percentage share",
+    "Proportionate share",
+    "Anchor Store",
+    "Anchors",
+    "Anchor(s)",
+    "Anchor Store(s)",
+    "Anchor tenants",
+    "Major Store",
+    "Majors",
+    "Major(s)",
+    "Major Store(s)",
+    "Major tenants",
+    "tenants exclude",
+    "tenants excluding",
+    "Tenant's Proportional share",
+    "Leasable floor Area",
+    "numerator"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

@@ -1,0 +1,131 @@
+{
+  "field_id": "lease_date",
+  "field_name": "Lease Date",
+  "category": "Basic Information",
+  "output_type": "Number",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "BASIC_INFORMATION.docx",
+  "overview": "It is the official day when the lease was made. Lease Date can be a printed or handwritten date.",
+  "preliminary": [
+    "BASIC INFORMATION \u2013 MASTER ABSTRACTION GUIDE",
+    "(Building | Landlord Name| Tenant Name| Lease Guarantor| Suite| Lease Date | Property Name| Street Address| City| State)",
+    "General Applicability: All leases (Office, Retail and Industrial)",
+    "Summary",
+    "Definitions",
+    "Building section",
+    "Landlord Name section",
+    "Tenant Name section",
+    "Guarantor section",
+    "Suite Identification section",
+    "Guarantor section",
+    "Leased Premises section",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Date on the top of the Page",
+      "question_text": "lease date is generally available on the 1st page of the lease itself \u2013 Search by Lease Date Keywords,",
+      "extraction_hint": "Extract Date",
+      "output_type": "Date",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Explicit Date Mentioned in Summary Section",
+      "question_text": "Lease date mentioned in summary section \u2013 Search by Lease Date Keywords,",
+      "extraction_hint": "Extract Date",
+      "output_type": "Date",
+      "search_scope": "summary",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q3",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "Defined Term Reference",
+      "question_text": "If lease date defined in definitions section \u2013 Search by Lease Date Keywords,",
+      "extraction_hint": "Extract Date",
+      "output_type": "Date",
+      "search_scope": "definitions",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q4",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q4",
+      "priority": 4,
+      "condition_type": "Silent",
+      "question_text": "If no lease date mentioned, record \"undated and Mark, the box in a different color for review.",
+      "extraction_hint": "Record \"undated\"",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": null,
+      "no_branch": null,
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Effective Date",
+    "First above written",
+    "Date of lease",
+    "Lease dated",
+    "Lease date",
+    "Agreement dated",
+    "Date of Agreement"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

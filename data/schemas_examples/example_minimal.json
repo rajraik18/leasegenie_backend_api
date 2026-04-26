@@ -1,0 +1,80 @@
+{
+  "schema_id": "example_minimal",
+  "name": "Minimal example: 5 BRD fields + 1 custom",
+  "version": "1.0.0",
+  "description": "Demonstrates both 'use_playbook' references and inline custom-field definitions. Copy this file, edit, and POST to /api/v1/schemas.",
+  "default_property_type": "Industrial",
+  "default_abstract_type": "Full Abstract",
+
+  "fields": [
+    { "use_playbook": "tenant_name" },
+    { "use_playbook": "landlord_name" },
+    { "use_playbook": "annual_base_rent" },
+    { "use_playbook": "security_deposit" },
+    { "use_playbook": "original_lease_commencement_date" },
+
+    {
+      "field_id": "esg_sustainability",
+      "field_name": "ESG / Sustainability Provisions",
+      "category": "Other Lease Clauses",
+      "output_type": "Text",
+      "property_applicability": {
+        "Retail": true,
+        "Industrial": true,
+        "Office": true,
+        "Mixed-Use": true
+      },
+      "keywords": [
+        "sustainability", "ESG", "energy efficiency", "LEED",
+        "green building", "carbon neutral", "renewable energy",
+        "net zero", "BREEAM", "Energy Star"
+      ],
+      "summary_keywords": ["sustainability", "ESG", "LEED", "green building"],
+      "questions": [
+        {
+          "id": "Q1",
+          "priority": 1,
+          "condition_type": "Definition Based",
+          "question_text": "Does the lease contain ESG, sustainability, or green-building provisions?",
+          "extraction_hint": "Extract the full clause if present, or summarize the obligations.",
+          "output_type": "Text",
+          "search_scope": "all",
+          "keywords": ["sustainability", "ESG", "LEED", "green"],
+          "yes_branch": {
+            "type": "extract",
+            "goto": null,
+            "literal": null,
+            "also_extract": true
+          },
+          "no_branch": {
+            "type": "literal",
+            "goto": null,
+            "literal": "None",
+            "also_extract": false
+          }
+        }
+      ],
+      "few_shot_examples": [
+        {
+          "qid": "Q1",
+          "clause": "Tenant shall comply with Landlord's sustainability program including LEED Silver certification requirements and energy benchmarking.",
+          "expected": {
+            "answer": "YES",
+            "value": "Compliance with Landlord's sustainability program; LEED Silver requirements; energy benchmarking"
+          },
+          "note": "Capture the obligation level (compliance vs aspirational) and any specific certifications."
+        },
+        {
+          "qid": "Q1",
+          "clause": "There are no sustainability or environmental performance obligations under this Lease.",
+          "expected": {
+            "answer": "NO",
+            "value": "None"
+          }
+        }
+      ],
+      "amendment_controls": true,
+      "depends_on": []
+    }
+  ]
+}

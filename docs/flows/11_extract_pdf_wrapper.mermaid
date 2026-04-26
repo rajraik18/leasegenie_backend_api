@@ -1,0 +1,49 @@
+flowchart TD
+    User([Client / CLI / UI]) -->|POST multipart<br/>/extract/pdf?<br/>property_type=Office&<br/>abstract_type=Full Abstract&<br/>tenant_name=TechCo| API1[extract_pdf.extract_pdf]
+
+    API1 --> ValidateQ{property_type AND<br/>abstract_type valid?}
+    ValidateQ -->|no| Err400[400 Bad Request]
+    ValidateQ -->|yes| AutoCreate[Auto-create hierarchy:<br/>Project → Property → Tenant<br/>tagged 'Ad-hoc extract']
+
+    AutoCreate --> PDFLoop{For each uploaded PDF<br/>idx = 0, 1, 2, ...}
+    PDFLoop --> WriteFile[Write PDF to<br/>uploads/TENANT_ID/<br/>NN_filename.pdf]
+    WriteFile --> CreateDoc[INSERT Document<br/>idx=0 → base_lease<br/>idx>0 → amendment_idx<br/>ocr_status=pending]
+    CreateDoc --> FireIndex[Fire<br/>index_document_task.delay<br/>→ async OCR + embed<br/>+ vector upsert]
+    FireIndex --> PDFLoop
+    PDFLoop -->|all PDFs written| CreateJob[INSERT ExtractionJob<br/>status=queued]
+
+    CreateJob --> FireExtract[Fire<br/>extract_tenant_task.delay<br/>→ runs Coordinator]
+
+    FireExtract -->|202 Accepted| Response1([{<br/>  id: job_id,<br/>  tenant_id,<br/>  status: queued,<br/>  progress: 0<br/>}])
+
+    Response1 --> PollLoop{Client polls}
+    PollLoop -->|GET /jobs/{job_id}| Status[extraction.get_job]
+    Status --> DBStatus[SELECT ExtractionJob]
+    DBStatus --> CheckStatus{job.status?}
+    CheckStatus -->|running| PollLoop
+    CheckStatus -->|complete| GetResult[GET /extract/jobs/{job_id}/result<br/>?format=json OR xlsx]
+
+    CheckStatus -->|failed| ErrFailed([422 or 500<br/>with error details])
+
+    GetResult --> FmtCheck{format param?}
+    FmtCheck -->|neither| Err400B[400 format must be<br/>'json' or 'xlsx']
+    FmtCheck -->|json| BuildAbsJSON[build_abstraction<br/>Flow 7]
+    FmtCheck -->|xlsx| BuildAbsXLSX[build_abstraction<br/>+ excel_export.to_bytes]
+
+    BuildAbsJSON --> JsonResponse([200 OK<br/>application/json<br/>TenantAbstractionOut<br/>with confidence + citation<br/>+ summary block])
+
+    BuildAbsXLSX --> XlsxSheets[Build workbook:<br/>Sheet 1 Summary<br/>Sheet 2 Lease Abstraction<br/>Sheet 3 Red Flags]
+    XlsxSheets --> FormatGrid[Apply formatting:<br/>frozen panes<br/>confidence bands<br/>needs_review highlighting<br/>currency format]
+    FormatGrid --> XlsxResponse([200 OK<br/>Content-Type:<br/>vnd.openxmlformats<br/>.spreadsheetml.sheet<br/>+ Content-Disposition:<br/>attachment; filename=*.xlsx])
+
+    style User fill:#2d6cdf,color:#fff
+    style Response1 fill:#fbbf24,color:#000
+    style JsonResponse fill:#2ea043,color:#fff
+    style XlsxResponse fill:#2ea043,color:#fff
+    style Err400 fill:#dc2626,color:#fff
+    style Err400B fill:#dc2626,color:#fff
+    style ErrFailed fill:#dc2626,color:#fff
+    style AutoCreate fill:#a855f7,color:#fff
+    style FireExtract fill:#f97316,color:#fff
+    style FireIndex fill:#f97316,color:#fff
+    style XlsxSheets fill:#06b6d4,color:#fff

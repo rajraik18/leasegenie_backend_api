@@ -1,0 +1,93 @@
+{
+  "field_id": "tenant_name",
+  "field_name": "Tenant Name",
+  "category": "Basic Information",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "BASIC_INFORMATION.docx",
+  "overview": "A tenant in a Commercial Real Estate (CRE) lease is a business, organization, or individual that rents space\u2014such as office, retail, or industrial property\u2014from a landlord for business operations. They are responsible for paying rent and adhering to agreed-upon terms, which may include maintenance, usage limitations, and insurance.",
+  "preliminary": [
+    "BASIC INFORMATION \u2013 MASTER ABSTRACTION GUIDE",
+    "(Building | Landlord Name| Tenant Name| Lease Guarantor| Suite| Lease Date | Property Name| Street Address| City| State)",
+    "General Applicability: All leases (Office, Retail and Industrial)",
+    "Summary",
+    "Definitions",
+    "Building section",
+    "Landlord Name section",
+    "Tenant Name section",
+    "Guarantor section",
+    "Suite Identification section",
+    "Guarantor section",
+    "Leased Premises section",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Identification",
+      "question_text": "Does the lease contain a summary page?",
+      "extraction_hint": "Tenant legal name",
+      "output_type": "Text",
+      "search_scope": "summary",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "finalize",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": "Multiple commencement dates mentioned",
+      "notes": "Note: In every lease, there must be tenant, to whom the premises is leased out. This field can never be blank or None.Note: In every lease, there must be tenant, to whom the premises is leased out. This field can never be blank or None."
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Trade Name Usage",
+      "question_text": "Check what is the Tenant\u2019s DBA / FKA",
+      "extraction_hint": "Trade name reference",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": null,
+      "red_flag": "Commencement subject to government approvals",
+      "notes": "Note: Legal vs. Trade Name: The legal entity (LLC, Corp) is the responsible party for paying rent and fulfilling lease terms. The DBA is simply the public-facing name.Note: Legal vs. Trade Name: The legal entity (LLC, Corp) is the responsible party for paying rent and fulfilling lease terms. The DBA is simply the public-facing name.IF NO \u2192 Mark, the box in a different color for review."
+    }
+  ],
+  "keywords": [
+    "Tenant",
+    "Original Tenant",
+    "Lessee",
+    "Assignee",
+    "Tenant's Name",
+    "Tenant's Trade Name",
+    "Trade Name",
+    "Business Name",
+    "Lessee's Trade Name",
+    "successor in interest",
+    "successor-in-interest",
+    "Parties"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

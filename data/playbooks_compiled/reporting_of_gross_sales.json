@@ -1,0 +1,64 @@
+{
+  "field_id": "reporting_of_gross_sales",
+  "field_name": "Reporting of Gross Sales",
+  "category": "Other Lease Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": false,
+    "Office": false,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "OTHER_LEASE_CLAUSES.docx",
+  "overview": "A reporting of gross sales clause in commercial leases requires tenants (usually retailers) to provide periodic, certified statements of total revenue generated from the premises, typically monthly or annually. This clause ensures accurate calculation of percentage rent (if applicable), helps landlords gauge, and allows for audits to verify that sales are not understated.",
+  "preliminary": [
+    "OTHER LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "(Allowance | Alteration | Assignment and Subletting| Casualty| Condemnation | Hazardous Materials | Holdover | Landlord Restriction | Monetary Default | Non \u2013 Monetary Default | Parking | Repair and Maintenance | Reporting of Financial Information | Reporting of Gross Sales | Sublease Provision | Subordination)",
+    "General Applicability: All leases (Office, Retail and Industrial) except for,",
+    "Reporting of Gross Sales \u2013 Applicable only in Retail leases",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Definition Based",
+      "question_text": "Does the lease contain any clause that refers to Reporting of Gross Sales keywords?",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Sales report and records",
+    "Records and Audits",
+    "Sales reports",
+    "Sales reporting",
+    "Reporting of sales",
+    "Reporting Requirements",
+    "Gross Sales Reporting"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

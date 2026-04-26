@@ -1,0 +1,139 @@
+{
+  "field_id": "lease_guarantor",
+  "field_name": "Lease Guarantor",
+  "category": "Basic Information",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "BASIC_INFORMATION.docx",
+  "overview": "A lease guarantor is a person or entity who legally agrees to pay rent and cover damages if a tenant defaults on their lease obligations.",
+  "preliminary": [
+    "BASIC INFORMATION \u2013 MASTER ABSTRACTION GUIDE",
+    "(Building | Landlord Name| Tenant Name| Lease Guarantor| Suite| Lease Date | Property Name| Street Address| City| State)",
+    "General Applicability: All leases (Office, Retail and Industrial)",
+    "Summary",
+    "Definitions",
+    "Building section",
+    "Landlord Name section",
+    "Tenant Name section",
+    "Guarantor section",
+    "Suite Identification section",
+    "Guarantor section",
+    "Leased Premises section",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Identification",
+      "question_text": "Does the lease contain a summary page?",
+      "extraction_hint": "Guarantor name",
+      "output_type": "Text",
+      "search_scope": "summary",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "flag",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Duration",
+      "question_text": "If the Guaranty is available, Check whether it is ongoing or limited?",
+      "extraction_hint": "Duration clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "flag",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "Scope of Guaranty",
+      "question_text": "If the Guaranty is available, check which obligation are guaranteed?",
+      "extraction_hint": "Guaranty scope",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "flag",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "Scope of Guaranty",
+      "question_text": "If the Guaranty is available, check is there is any limitation on Guarantor's liability?",
+      "extraction_hint": "Guaranty scope",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "flag",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Tenant's Guarantor",
+    "Lease Guarantor",
+    "Guarantor",
+    "Guaranty",
+    "Guarantee"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

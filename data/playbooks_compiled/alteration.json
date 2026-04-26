@@ -1,0 +1,74 @@
+{
+  "field_id": "alteration",
+  "field_name": "Alteration",
+  "category": "Other Lease Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "OTHER_LEASE_CLAUSES.docx",
+  "overview": "Alterations in leases refer to physical changes or renovations made by a tenant to a leased premises, typically requiring prior landlord consent via a License to Alter. Clauses range from absolute prohibitions to qualified permission for internal, non-structural works.",
+  "preliminary": [
+    "OTHER LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "(Allowance | Alteration | Assignment and Subletting| Casualty| Condemnation | Hazardous Materials | Holdover | Landlord Restriction | Monetary Default | Non \u2013 Monetary Default | Parking | Repair and Maintenance | Reporting of Financial Information | Reporting of Gross Sales | Sublease Provision | Subordination)",
+    "General Applicability: All leases (Office, Retail and Industrial) except for,",
+    "Reporting of Gross Sales \u2013 Applicable only in Retail leases",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Definition Based",
+      "question_text": "Does the lease contain any clause that refers to Alteration keywords?",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Alterations",
+    "Tenants Alterations",
+    "Alteration; Discharge of Lien",
+    "Repairs and Alterations",
+    "Alterations or Improvements",
+    "Structural",
+    "Ownership of Alterations; Indemnity.",
+    "Structural Improvements",
+    "Renovations By Tenant",
+    "Initial Alterations",
+    "Structural Improvements and Alterations",
+    "Non-Structural Improvements and Alterations",
+    "Improvements, Alterations and Renovations by Tenant",
+    "Alteration",
+    "Tenant-Made Alterations and Trade Fixtures",
+    "Trade Fixtures",
+    "Remodeling"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

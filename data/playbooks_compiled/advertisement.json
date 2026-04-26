@@ -1,0 +1,149 @@
+{
+  "field_id": "advertisement",
+  "field_name": "Advertisement",
+  "category": "Reimbursements",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": false,
+    "Office": false,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "Questions.xlsx",
+  "overview": null,
+  "preliminary": [],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "No Payments",
+      "question_text": "Is tenant paying for Advertising? If No, extract \"No Recovery\"",
+      "extraction_hint": "Extract \"No Recovery\"",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Dollar Amount",
+      "question_text": "If advertising/marketing contribution specified, extract amount",
+      "extraction_hint": "Extract Amount",
+      "output_type": "Currency",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "Percentage Stated",
+      "question_text": "If contribution based on % of sales, extract %",
+      "extraction_hint": "Extract Percentage",
+      "output_type": "Numeric",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q4",
+      "priority": 4,
+      "condition_type": "Estimated Amount",
+      "question_text": "If estimated amount mentioned in Summary, extract clause",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q5",
+      "priority": 5,
+      "condition_type": "Silent",
+      "question_text": "If no advertising contribution mentioned, record none",
+      "extraction_hint": "Record None",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Advertising",
+    "Promotion",
+    "Promotion Fund",
+    "Initial Promotion Fund",
+    "Promotional Expense",
+    "Advertising Charge"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

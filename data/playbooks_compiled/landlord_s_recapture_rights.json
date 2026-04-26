@@ -1,0 +1,79 @@
+{
+  "field_id": "landlord_s_recapture_rights",
+  "field_name": "Landlord's Recapture Rights",
+  "category": "Critical Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+  "overview": "Landlord recapture rights allow a landlord to terminate a commercial lease and take back possession of all or part of a, usually upon a tenant's request to sublease or assign the space. Often negotiated, these clauses enable landlords to control tenant mix, recapture space if market rents are higher, or remove a tenant who is violating terms like operating covenants.",
+  "preliminary": [
+    "CRITICAL LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "(Continuous Operation | Contraction Option| Co-Tenancy| Exclusive Use| Go-Dark| Landlord\u2019s Recapture Rights | Permitted Use| Purchase Option| Relocation | Renewal Rights | Right of Expansion | ROFO | ROFR| Sales Kick-Out| Tenant Termination | Landlord Termination)",
+    "Summary",
+    "Definitions",
+    "Continuous Operation",
+    "Contraction Option",
+    "Co-Tenancy",
+    "Exclusive Use",
+    "Go-Dark",
+    "Landlord's Recapture Rights",
+    "Permitted Use",
+    "Purchase Option",
+    "Relocation",
+    "Renewal Options",
+    "Right of Expansion",
+    "ROFO",
+    "ROFR",
+    "Sales Kick-Out",
+    "Tenant Termination",
+    "Landlord Termination",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Right Granted",
+      "question_text": "Does the lease contain any clause that refers to Landlord Recapture Right keywords?",
+      "extraction_hint": "Recapture clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Recapture for failure to Operate",
+    "Right of Recapture",
+    "LL's right of Recapture",
+    "Failure of Tenant's to Operate its Business",
+    "Landlord Recapture Right",
+    "Permit Based Termination",
+    "Upfitting By Tenant",
+    "Permits Contingency",
+    "Landlord Limited Right to Recapture Premises"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

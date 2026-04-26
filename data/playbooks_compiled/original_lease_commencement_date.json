@@ -1,0 +1,213 @@
+{
+  "field_id": "original_lease_commencement_date",
+  "field_name": "Original Lease Commencement Date",
+  "category": "Basic Information",
+  "output_type": "Number",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "BASIC_INFORMATION.docx",
+  "overview": "General info \u2013 Applicable to all types of leases (office, retail and or industrial). The lease commencement date is the date from which the lease commences. Scenarios 1: The Lease Commencement Date Can be fetched from Commencement Letter may be provided as an explicit date part of the lease agreement (either in the summary and or the body of the lease) or Formula based on may be a language OR May be a combination of both (i.e., language provided in the lease agreement and Lease Commencement Date (LCD)  /or Rent Commencement date (RCD) and the Term Ie. LED = LCD/RCD + term definition Scenarios 2: (Amendment available) \u2013 If an amendment is available, then the lease commencement date from the amendment should also be sourced Context: Abstraction of the below data fields from the perspective of an Originator or an Underwriter. Does the lease contain a Summary or Executive Summary or Basic Lease Provision or Fundamental Lease Provision or Basic Provision section referencing to the Summary Section Keywords Extract the full clauses that provide reference to the below: Commencement Date Lease Commencement Term begins Term Commencement Effective Date Lease begins Delivery date Possession date Definition of firm date: Explicit calendar date (e.g., January 1, 2025) Numeric date (01/01/2025) Caution: Ensure there are no strings prior or post the commencement date i.e. there should be no text or string pre or post the dates. If any sort of text exists like, anticipated to be or est, treat this to be a text and do not stop at this point. If the date is a text extract the descriptive details of the date and then go to QUESTION 4.Caution: Ensure there are no strings prior or post the commencement date i.e. there should be no text or string pre or post the dates. If any sort of text exists like, anticipated to be or est, treat this to be a text and do not stop at this point. If the date is a text extract the descriptive details of the date and then go to QUESTION 4. Examples: \u201cUpon substantial completion\u201d \u201cUpon delivery of premises\u201d 90 days after permit issuance Upon tenant occupancy Term section Definitions section Possession clause Delivery clause Examples: In no event later than Deemed to commence on Commencement date to be determined based xx% of occupancy Caution: Lease commencement date and Rent commencement date are not the same. Rent Commencement date is the date the tenant starts paying rent and the lease commencement date is the date the lease starts. Typically, the difference (if any in a situation where the two dates are defined) is considered to be free rent period.Caution: Lease commencement date and Rent commencement date are not the same. Rent Commencement date is the date the tenant starts paying rent and the lease commencement date is the date the lease starts. Typically, the difference (if any in a situation where the two dates are defined) is considered to be free rent period.",
+  "preliminary": [
+    "BASIC INFORMATION \u2013 MASTER ABSTRACTION GUIDE",
+    "(Building | Landlord Name| Tenant Name| Lease Guarantor| Suite| Lease Date | Property Name| Street Address| City| State)",
+    "General Applicability: All leases (Office, Retail and Industrial)",
+    "Summary",
+    "Definitions",
+    "Building section",
+    "Landlord Name section",
+    "Tenant Name section",
+    "Guarantor section",
+    "Suite Identification section",
+    "Guarantor section",
+    "Leased Premises section",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Commencement Letter",
+      "question_text": "Does we have commencement Letter?",
+      "extraction_hint": "Extract Date",
+      "output_type": "Date",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Explicit Date mentioned in Summary",
+      "question_text": "Does the lease contain a summary page?",
+      "extraction_hint": "Extract Date",
+      "output_type": "Date",
+      "search_scope": "summary",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q3",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q3",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "Estimated LCD mentioned in Summary",
+      "question_text": "Is there a clearly defined \u201cCommencement Date\u201d field in the body of the lease?",
+      "extraction_hint": "Extract language",
+      "output_type": "Text",
+      "search_scope": "body",
+      "keywords": [],
+      "yes_branch": {
+        "type": "goto",
+        "goto": "Q4",
+        "literal": null,
+        "also_extract": false
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q6",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q4",
+      "priority": 4,
+      "condition_type": "Explicit Date mentioned in Main Lease",
+      "question_text": "Is the commencement date a firm calendar date?",
+      "extraction_hint": "Extract Date",
+      "output_type": "Date",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q5",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q5",
+      "priority": 5,
+      "condition_type": "Conditional language",
+      "question_text": "Is the commencement date conditional/descriptive determined by Landlord\u2019s or Tenant\u2019s action or defined in another section?",
+      "extraction_hint": "Extract language",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q6",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q6",
+      "priority": 6,
+      "condition_type": "Silent but Term defined",
+      "question_text": "Does lease contain any clause relating to outside commencement?",
+      "extraction_hint": "Extract Term language",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": null,
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Commencement Date",
+    "Anticipated Commencement Date",
+    "Estimated Commencement Date",
+    "First Early Access Date",
+    "Floor Commencement Date",
+    "Anticipated Delivery Date",
+    "Leased Premises, Term and Use",
+    "Sublease Commencement Date",
+    "Expansion Premises Minimum Base Rent Commencement Date",
+    "Lease Commencement Date",
+    "Completion Date",
+    "Substantial Completion; Commencement Date",
+    "Rent Commencement Date",
+    "Term",
+    "Commences on",
+    "Original Term",
+    "Commencement Date of Term",
+    "Commencing",
+    "Commencing on",
+    "Duration and Commencement",
+    "Delivery of Premises",
+    "Acceptance",
+    "Primary Lease Term",
+    "Delivery Date",
+    "Outside Delivery Date",
+    "Condition of Demised premises",
+    "Turnover date",
+    "Outside Possession Date",
+    "Outside Closing Date",
+    "Landlord Delivers the Premises to Tenant",
+    "Possession of Premises",
+    "Possession Date",
+    "Date of Possession",
+    "Move-in Date",
+    "Delivery of Possession Date",
+    "Occupancy Date"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

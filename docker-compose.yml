@@ -1,0 +1,108 @@
+# =============================================================================
+# LeaseGenie API - HYBRID deployment
+# =============================================================================
+# Containers:
+#   - api      (FastAPI)
+#   - worker   (Celery)
+#
+# Local installs (running on the Windows/Linux host directly):
+#   - PostgreSQL 16 + pgvector  (port 5432)
+#   - Redis 7+                  (port 6379)
+#   - Ollama                    (port 11434)
+#
+# The containers reach host services via `host.docker.internal`, which is
+# Docker Desktop's built-in DNS name for the host machine. On Linux without
+# Docker Desktop, the `extra_hosts: host-gateway` directive makes the same
+# name resolve to the docker bridge gateway.
+#
+# Setup checklist before `docker compose up`:
+#   1. Postgres listening on 0.0.0.0:5432 (not just localhost)
+#   2. Postgres pg_hba.conf allows connections from 172.16.0.0/12 (Docker's range)
+#   3. pgvector extension installed in the leasegenie database
+#   4. Redis listening on 0.0.0.0:6379 with `protected-mode no` for dev
+#   5. Ollama listening on 0.0.0.0:11434 (set OLLAMA_HOST=0.0.0.0)
+#   6. Required Ollama models pulled: qwen2.5:14b-instruct-q5_K_M, nomic-embed-text
+#
+# See DEPLOYMENT.md section "Hybrid setup" for the host-side configuration.
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # LeaseGenie API
+  # ---------------------------------------------------------------------------
+  api:
+    build: .
+    container_name: leasegenie-api
+    extra_hosts:
+      # Makes `host.docker.internal` work on Linux (Docker Desktop sets this
+      # automatically; this line is a no-op on Mac/Windows but harmless).
+      - "host.docker.internal:host-gateway"
+    environment:
+      # All three services point at host.docker.internal because they're
+      # running on the host OS, not in the docker network.
+      DATABASE_URL: "${DATABASE_URL:-postgresql+psycopg2://leasegenie:leasegenie@host.docker.internal:5432/leasegenie}"
+      CELERY_BROKER_URL: "${CELERY_BROKER_URL:-redis://host.docker.internal:6379/0}"
+      CELERY_RESULT_BACKEND: "${CELERY_RESULT_BACKEND:-redis://host.docker.internal:6379/1}"
+      CELERY_TASK_ALWAYS_EAGER: "false"
+      OLLAMA_BASE_URL: "${OLLAMA_BASE_URL:-http://host.docker.internal:11434}"
+      OLLAMA_MODEL: "${OLLAMA_MODEL:-qwen2.5:14b-instruct-q5_K_M}"
+      OLLAMA_EMBED_MODEL: "${OLLAMA_EMBED_MODEL:-nomic-embed-text}"
+      OLLAMA_EMBED_DIM: "${OLLAMA_EMBED_DIM:-768}"
+      UPLOAD_DIR: /data/uploads
+      EXPORT_DIR: /data/exports
+      MAX_UPLOAD_SIZE_MB: "${MAX_UPLOAD_SIZE_MB:-100}"
+      MAX_UPLOAD_TOTAL_MB: "${MAX_UPLOAD_TOTAL_MB:-500}"
+      MAX_PDFS_PER_REQUEST: "${MAX_PDFS_PER_REQUEST:-8}"
+    volumes:
+      - api_data:/data
+      - ./data/LeaseGenie_BRD.xlsx:/app/data/LeaseGenie_BRD.xlsx:ro
+      - ./data/playbooks_source:/app/data/playbooks_source:ro
+      - ./data/playbooks_compiled:/app/data/playbooks_compiled
+      - ./data/schemas_examples:/app/data/schemas_examples:ro
+      - ./scripts:/app/scripts:ro
+    ports:
+      - "${API_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Celery worker (separate process, same image)
+  # ---------------------------------------------------------------------------
+  worker:
+    build: .
+    container_name: leasegenie-worker
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      api:
+        condition: service_started
+    environment:
+      DATABASE_URL: "${DATABASE_URL:-postgresql+psycopg2://leasegenie:leasegenie@host.docker.internal:5432/leasegenie}"
+      CELERY_BROKER_URL: "${CELERY_BROKER_URL:-redis://host.docker.internal:6379/0}"
+      CELERY_RESULT_BACKEND: "${CELERY_RESULT_BACKEND:-redis://host.docker.internal:6379/1}"
+      CELERY_TASK_ALWAYS_EAGER: "false"
+      OLLAMA_BASE_URL: "${OLLAMA_BASE_URL:-http://host.docker.internal:11434}"
+      OLLAMA_MODEL: "${OLLAMA_MODEL:-qwen2.5:14b-instruct-q5_K_M}"
+      OLLAMA_EMBED_MODEL: "${OLLAMA_EMBED_MODEL:-nomic-embed-text}"
+      OLLAMA_EMBED_DIM: "${OLLAMA_EMBED_DIM:-768}"
+      UPLOAD_DIR: /data/uploads
+      EXPORT_DIR: /data/exports
+    volumes:
+      - api_data:/data
+      - ./data/LeaseGenie_BRD.xlsx:/app/data/LeaseGenie_BRD.xlsx:ro
+      - ./data/playbooks_source:/app/data/playbooks_source:ro
+      - ./data/playbooks_compiled:/app/data/playbooks_compiled
+      - ./scripts:/app/scripts:ro
+    command: celery -A app.workers.celery_app:celery_app worker --loglevel=info --concurrency=2
+    restart: unless-stopped
+
+volumes:
+  # Only api_data remains - the previous postgres_data, redis_data, ollama_data
+  # volumes are gone because those services run on the host now.
+  api_data:

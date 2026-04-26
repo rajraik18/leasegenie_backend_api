@@ -1,0 +1,53 @@
+sequenceDiagram
+    autonumber
+    actor User as Client
+    participant API as FastAPI<br/>/tenants/{id}/extract
+    participant DB as SQLite
+    participant Celery as Celery task<br/>leasegenie.extract_tenant
+    participant Pipeline as pipeline.<br/>run_extraction_for_tenant
+    participant Coord as Coordinator<br/>(multi-agent)
+
+    User->>+API: POST /tenants/TENANT_ID/extract
+    API->>+DB: db.get Tenant
+    DB-->>-API: Tenant row
+    API->>API: Validate: has documents?
+    alt No documents uploaded
+        API-->>User: 409 tenant has no documents
+    end
+    API->>+DB: Insert ExtractionJob<br/>status=queued
+    DB-->>-API: job_id
+    API->>+Celery: extract_tenant_task.delay(<br/>tenant_id, job_id)
+    Note over Celery: If CELERY_TASK_ALWAYS_EAGER<br/>runs inline; else queued
+    Celery->>+Pipeline: run_extraction_for_tenant(<br/>tenant, job_id)
+    Pipeline->>DB: UPDATE job status=running,<br/>started_at=now
+    Pipeline->>DB: UPDATE docs ocr_status=<br/>ocr_in_progress
+    Pipeline->>+Coord: coordinator.run(<br/>abstract_type, property_type,<br/>documents,<br/>on_progress, on_result)
+
+    loop per field × per document
+        Coord->>Coord: Extract one field<br/>(see Flow 5)
+        Coord->>Pipeline: on_result(AgentFieldResult)
+        Pipeline->>DB: Upsert FieldValue<br/>+ AuditLog entry
+        Coord->>Pipeline: on_progress(done, total)
+        Pipeline->>DB: UPDATE job progress=N%,<br/>completed_fields=N
+    end
+
+    Coord->>Coord: ReconciliationAgent.run<br/>(cross-doc checks)
+    Coord-->>-Pipeline: (final_results, report)
+
+    Pipeline->>DB: UPDATE docs ocr_status=complete
+    loop per red_flag in report
+        Pipeline->>DB: Insert AuditLog<br/>action=red_flag
+    end
+    Pipeline->>DB: UPDATE job status=complete,<br/>progress=100,<br/>finished_at=now
+    Pipeline-->>-Celery: done
+    Celery-->>-API: (async)
+
+    API->>+DB: Refresh job row
+    DB-->>-API: current status
+    API-->>-User: 202 Accepted {job_id, status, progress}
+
+    Note over User,API: Client polls GET /jobs/{job_id}
+    User->>+API: GET /jobs/{job_id}
+    API->>+DB: db.get ExtractionJob
+    DB-->>-API: {status, progress, completed_fields, total_fields}
+    API-->>-User: JobOut

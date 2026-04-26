@@ -1,0 +1,153 @@
+{
+  "field_id": "lease_term_yrs",
+  "field_name": "Lease Term (yrs.)",
+  "category": "Basic Information",
+  "output_type": "Number",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "BASIC_INFORMATION.docx",
+  "overview": "General info \u2013 Applicable to all types of leases (office, retail and or industrial). The lease term is the period between LED and LCD. Summary Section Keywords",
+  "preliminary": [
+    "BASIC INFORMATION \u2013 MASTER ABSTRACTION GUIDE",
+    "(Building | Landlord Name| Tenant Name| Lease Guarantor| Suite| Lease Date | Property Name| Street Address| City| State)",
+    "General Applicability: All leases (Office, Retail and Industrial)",
+    "Summary",
+    "Definitions",
+    "Building section",
+    "Landlord Name section",
+    "Tenant Name section",
+    "Guarantor section",
+    "Suite Identification section",
+    "Guarantor section",
+    "Leased Premises section",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Term based",
+      "question_text": "Does the lease have a Summary page or a equivalent page with the below keywords?",
+      "extraction_hint": "Extract Number of years",
+      "output_type": "Numeric",
+      "search_scope": "summary",
+      "keywords": [],
+      "yes_branch": {
+        "type": "goto",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": false
+      },
+      "no_branch": null,
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Explicit Date Mentioned",
+      "question_text": "Is the lease term defined in years (in summary or in Main Lease) by using Lease Term Keywords,",
+      "extraction_hint": "Extract Number of years",
+      "output_type": "Numeric",
+      "search_scope": "body",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q3",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "Defined Term Reference",
+      "question_text": "If commencement and expiration dates mentioned, calculate term (LED-LCD). For Ex. LCD is 01/01/2025 and LED is 12/31/2025, Term will be 1 year (12/31/2025-01/01/2025)",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q4",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q4",
+      "priority": 4,
+      "condition_type": "Silent",
+      "question_text": "If term defined as x years from commencement date,",
+      "extraction_hint": "Record None",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q5",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q5",
+      "priority": 5,
+      "condition_type": "",
+      "question_text": "If lease term not defined, record \u201cNone\u201d",
+      "extraction_hint": null,
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": null,
+      "no_branch": null,
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Existing Expiration Date",
+    "Expiration Date",
+    "Lease Term",
+    "Term",
+    "Original Term",
+    "Initial Term",
+    "Lease Period"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": [
+    "original_lease_commencement_date",
+    "lease_expiration_date"
+  ]
+}

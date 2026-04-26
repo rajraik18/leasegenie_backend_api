@@ -1,0 +1,80 @@
+{
+  "field_id": "rules_and_regulations",
+  "field_name": "Rules and Regulations",
+  "category": "Other Lease Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "OTHER_LEASE_CLAUSES.docx",
+  "overview": "A Rules and Regulations clause governs Tenant's day-to-day behavior at the Premises and Project. It typically establishes rules for common areas, parking, signage, waste disposal, noise, odors, pets, smoking, and hours of operation. Rules are almost always attached as an exhibit and Landlord typically reserves the right to modify them so long as changes are uniformly enforced. If rules conflict with lease terms, the lease generally controls.",
+  "preliminary": [
+    "OTHER LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "General Applicability: All leases (Office, Retail and Industrial).",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Definition Based",
+      "question_text": "Does the lease include Rules and Regulations (either in the body or as an exhibit)?",
+      "extraction_hint": "Identify whether R&R are: (a) in body of lease, (b) in an exhibit/addendum (note which one), (c) by reference to a separate document. Summarize key restrictions, and note Landlord's right to modify.",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [
+        "rules and regulations",
+        "rules & regulations"
+      ],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "literal",
+        "goto": null,
+        "literal": "None",
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": "Common locations: Section 6 + Exhibit D (HMBP-BCP), Paragraph 31 + Rules exhibit (ProLogis)."
+    }
+  ],
+  "keywords": [
+    "Rules and Regulations",
+    "Rules & Regulations",
+    "uniformly enforced",
+    "uniformly applied",
+    "common areas",
+    "ingress and egress",
+    "outside storage",
+    "obstruct",
+    "nuisance",
+    "modify the Rules",
+    "amend the Rules",
+    "conflict between said rules",
+    "conflict.+rules"
+  ],
+  "summary_keywords": [
+    "Rules and Regulations",
+    "Rules & Regulations",
+    "uniformly enforced",
+    "uniformly applied",
+    "common areas",
+    "ingress and egress",
+    "outside storage",
+    "obstruct"
+  ],
+  "amendment_controls": true,
+  "depends_on": []
+}

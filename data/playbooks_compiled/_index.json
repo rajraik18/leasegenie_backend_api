@@ -1,0 +1,795 @@
+{
+  "count": 79,
+  "playbooks": [
+    {
+      "field_id": "admin_fee",
+      "field_name": "Admin Fee",
+      "category": "Reimbursements",
+      "source_docx": "Questions.xlsx",
+      "question_count": 6,
+      "keyword_count": 10,
+      "output_type": "Text",
+      "file": "admin_fee.json"
+    },
+    {
+      "field_id": "advertisement",
+      "field_name": "Advertisement",
+      "category": "Reimbursements",
+      "source_docx": "Questions.xlsx",
+      "question_count": 5,
+      "keyword_count": 6,
+      "output_type": "Text",
+      "file": "advertisement.json"
+    },
+    {
+      "field_id": "allowance",
+      "field_name": "Allowance",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 2,
+      "keyword_count": 34,
+      "output_type": "Text",
+      "file": "allowance.json"
+    },
+    {
+      "field_id": "alteration",
+      "field_name": "Alteration",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 17,
+      "output_type": "Text",
+      "file": "alteration.json"
+    },
+    {
+      "field_id": "annual_base_rent",
+      "field_name": "Annual Base Rent",
+      "category": "Financial Clauses",
+      "source_docx": "FINANCIAL_TERMS.docx",
+      "question_count": 3,
+      "keyword_count": 30,
+      "output_type": "Number",
+      "file": "annual_base_rent.json"
+    },
+    {
+      "field_id": "assignment_and_subletting",
+      "field_name": "Assignment and Subletting",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 21,
+      "output_type": "Text",
+      "file": "assignment_and_subletting.json"
+    },
+    {
+      "field_id": "base_year",
+      "field_name": "Base Year",
+      "category": "Reimbursements",
+      "source_docx": "Questions.xlsx",
+      "question_count": 3,
+      "keyword_count": 11,
+      "output_type": "Number",
+      "file": "base_year.json"
+    },
+    {
+      "field_id": "base_year_amount",
+      "field_name": "Base Year Amount",
+      "category": "Reimbursements",
+      "source_docx": "Questions.xlsx",
+      "question_count": 2,
+      "keyword_count": 10,
+      "output_type": "Number",
+      "file": "base_year_amount.json"
+    },
+    {
+      "field_id": "breakpoint",
+      "field_name": "Breakpoint",
+      "category": "Financial Clauses",
+      "source_docx": "Questions.xlsx",
+      "question_count": 5,
+      "keyword_count": 7,
+      "output_type": "Number",
+      "file": "breakpoint.json"
+    },
+    {
+      "field_id": "brokers",
+      "field_name": "Brokers",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 13,
+      "output_type": "Text",
+      "file": "brokers.json"
+    },
+    {
+      "field_id": "building",
+      "field_name": "Building",
+      "category": "Basic Information",
+      "source_docx": "BASIC_INFORMATION.docx",
+      "question_count": 1,
+      "keyword_count": 17,
+      "output_type": "Text",
+      "file": "building.json"
+    },
+    {
+      "field_id": "cam",
+      "field_name": "CAM",
+      "category": "Reimbursements",
+      "source_docx": "REIMBURSEMENTS.docx",
+      "question_count": 13,
+      "keyword_count": 27,
+      "output_type": "Text",
+      "file": "cam.json"
+    },
+    {
+      "field_id": "cam_exclusion",
+      "field_name": "CAM Exclusion",
+      "category": "Reimbursements",
+      "source_docx": "Questions.xlsx",
+      "question_count": 2,
+      "keyword_count": 48,
+      "output_type": "Text",
+      "file": "cam_exclusion.json"
+    },
+    {
+      "field_id": "cam_inclusion",
+      "field_name": "CAM Inclusion",
+      "category": "Reimbursements",
+      "source_docx": "Questions.xlsx",
+      "question_count": 2,
+      "keyword_count": 49,
+      "output_type": "Text",
+      "file": "cam_inclusion.json"
+    },
+    {
+      "field_id": "caps_on_cam",
+      "field_name": "Caps on CAM",
+      "category": "Reimbursements",
+      "source_docx": "Questions.xlsx",
+      "question_count": 3,
+      "keyword_count": 11,
+      "output_type": "Text",
+      "file": "caps_on_cam.json"
+    },
+    {
+      "field_id": "casualty",
+      "field_name": "Casualty",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 30,
+      "output_type": "Text",
+      "file": "casualty.json"
+    },
+    {
+      "field_id": "city",
+      "field_name": "City",
+      "category": "Basic Information",
+      "source_docx": "BASIC_INFORMATION.docx",
+      "question_count": 4,
+      "keyword_count": 4,
+      "output_type": "Text",
+      "file": "city.json"
+    },
+    {
+      "field_id": "co_tenancy",
+      "field_name": "Co-Tenancy",
+      "category": "Critical Clauses",
+      "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 14,
+      "output_type": "Text",
+      "file": "co_tenancy.json"
+    },
+    {
+      "field_id": "condemnation",
+      "field_name": "Condemnation",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 14,
+      "output_type": "Text",
+      "file": "condemnation.json"
+    },
+    {
+      "field_id": "continuous_operation",
+      "field_name": "Continuous Operation",
+      "category": "Critical Clauses",
+      "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 12,
+      "output_type": "Text",
+      "file": "continuous_operation.json"
+    },
+    {
+      "field_id": "contraction_option",
+      "field_name": "Contraction Option",
+      "category": "Critical Clauses",
+      "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 5,
+      "output_type": "Text",
+      "file": "contraction_option.json"
+    },
+    {
+      "field_id": "estoppel_certificate",
+      "field_name": "Estoppel Certificate",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 2,
+      "keyword_count": 14,
+      "output_type": "Text",
+      "file": "estoppel_certificate.json"
+    },
+    {
+      "field_id": "exclusive_use",
+      "field_name": "Exclusive Use",
+      "category": "Critical Clauses",
+      "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 13,
+      "output_type": "Text",
+      "file": "exclusive_use.json"
+    },
+    {
+      "field_id": "force_majeure",
+      "field_name": "Force Majeure",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 2,
+      "keyword_count": 20,
+      "output_type": "Text",
+      "file": "force_majeure.json"
+    },
+    {
+      "field_id": "future_rent_steps",
+      "field_name": "Future Rent Steps",
+      "category": "Financial Clauses",
+      "source_docx": "FINANCIAL_TERMS.docx",
+      "question_count": 7,
+      "keyword_count": 17,
+      "output_type": "Number",
+      "file": "future_rent_steps.json"
+    },
+    {
+      "field_id": "go_dark",
+      "field_name": "Go-Dark",
+      "category": "Critical Clauses",
+      "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 7,
+      "output_type": "Text",
+      "file": "go_dark.json"
+    },
+    {
+      "field_id": "gross_up",
+      "field_name": "Gross-up",
+      "category": "Reimbursements",
+      "source_docx": "Questions.xlsx",
+      "question_count": 3,
+      "keyword_count": 7,
+      "output_type": "Text",
+      "file": "gross_up.json"
+    },
+    {
+      "field_id": "hazardous_materials",
+      "field_name": "Hazardous Materials",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 23,
+      "output_type": "Text",
+      "file": "hazardous_materials.json"
+    },
+    {
+      "field_id": "holdover",
+      "field_name": "Holdover",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 12,
+      "output_type": "Text",
+      "file": "holdover.json"
+    },
+    {
+      "field_id": "indemnification",
+      "field_name": "Indemnification",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 2,
+      "keyword_count": 15,
+      "output_type": "Text",
+      "file": "indemnification.json"
+    },
+    {
+      "field_id": "landlord_insurance",
+      "field_name": "Landlord Insurance",
+      "category": "Reimbursements",
+      "source_docx": "REIMBURSEMENTS.docx",
+      "question_count": 9,
+      "keyword_count": 14,
+      "output_type": "Text",
+      "file": "landlord_insurance.json"
+    },
+    {
+      "field_id": "landlord_name",
+      "field_name": "Landlord Name",
+      "category": "Basic Information",
+      "source_docx": "BASIC_INFORMATION.docx",
+      "question_count": 1,
+      "keyword_count": 8,
+      "output_type": "Text",
+      "file": "landlord_name.json"
+    },
+    {
+      "field_id": "landlord_restriction",
+      "field_name": "Landlord Restriction",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 8,
+      "output_type": "Text",
+      "file": "landlord_restriction.json"
+    },
+    {
+      "field_id": "landlord_s_recapture_rights",
+      "field_name": "Landlord's Recapture Rights",
+      "category": "Critical Clauses",
+      "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 9,
+      "output_type": "Text",
+      "file": "landlord_s_recapture_rights.json"
+    },
+    {
+      "field_id": "landlord_termination",
+      "field_name": "Landlord Termination",
+      "category": "Critical Clauses",
+      "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 7,
+      "output_type": "Text",
+      "file": "landlord_termination.json"
+    },
+    {
+      "field_id": "late_payment",
+      "field_name": "Late Payment",
+      "category": "Financial Clauses",
+      "source_docx": "FINANCIAL_TERMS.docx",
+      "question_count": 3,
+      "keyword_count": 18,
+      "output_type": "Text",
+      "file": "late_payment.json"
+    },
+    {
+      "field_id": "lease_date",
+      "field_name": "Lease Date",
+      "category": "Basic Information",
+      "source_docx": "BASIC_INFORMATION.docx",
+      "question_count": 4,
+      "keyword_count": 7,
+      "output_type": "Number",
+      "file": "lease_date.json"
+    },
+    {
+      "field_id": "lease_expiration_date",
+      "field_name": "Lease Expiration Date",
+      "category": "Basic Information",
+      "source_docx": "BASIC_INFORMATION.docx",
+      "question_count": 5,
+      "keyword_count": 15,
+      "output_type": "Number",
+      "file": "lease_expiration_date.json"
+    },
+    {
+      "field_id": "lease_guarantor",
+      "field_name": "Lease Guarantor",
+      "category": "Basic Information",
+      "source_docx": "BASIC_INFORMATION.docx",
+      "question_count": 4,
+      "keyword_count": 5,
+      "output_type": "Text",
+      "file": "lease_guarantor.json"
+    },
+    {
+      "field_id": "lease_term_yrs",
+      "field_name": "Lease Term (yrs.)",
+      "category": "Basic Information",
+      "source_docx": "BASIC_INFORMATION.docx",
+      "question_count": 5,
+      "keyword_count": 7,
+      "output_type": "Number",
+      "file": "lease_term_yrs.json"
+    },
+    {
+      "field_id": "leased_rsf",
+      "field_name": "Leased RSF",
+      "category": "Basic Information",
+      "source_docx": "BASIC_INFORMATION.docx",
+      "question_count": 1,
+      "keyword_count": 18,
+      "output_type": "Number",
+      "file": "leased_rsf.json"
+    },
+    {
+      "field_id": "marketing",
+      "field_name": "Marketing",
+      "category": "Reimbursements",
+      "source_docx": "Questions.xlsx",
+      "question_count": 4,
+      "keyword_count": 5,
+      "output_type": "Text",
+      "file": "marketing.json"
+    },
+    {
+      "field_id": "mgmt_fee",
+      "field_name": "Mgmt. Fee",
+      "category": "Reimbursements",
+      "source_docx": "Questions.xlsx",
+      "question_count": 6,
+      "keyword_count": 8,
+      "output_type": "Text",
+      "file": "mgmt_fee.json"
+    },
+    {
+      "field_id": "monetary_default",
+      "field_name": "Monetary Default",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 26,
+      "output_type": "Text",
+      "file": "monetary_default.json"
+    },
+    {
+      "field_id": "most_recent_lease_start",
+      "field_name": "Most Recent Lease Start",
+      "category": "Basic Information",
+      "source_docx": "BASIC_INFORMATION.docx",
+      "question_count": 2,
+      "keyword_count": 8,
+      "output_type": "Number",
+      "file": "most_recent_lease_start.json"
+    },
+    {
+      "field_id": "move_out_conditions",
+      "field_name": "Move-Out Conditions",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 3,
+      "keyword_count": 31,
+      "output_type": "Text",
+      "file": "move_out_conditions.json"
+    },
+    {
+      "field_id": "non_monetary_default",
+      "field_name": "Non-Monetary Default",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 26,
+      "output_type": "Text",
+      "file": "non_monetary_default.json"
+    },
+    {
+      "field_id": "notices",
+      "field_name": "Notices",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 3,
+      "keyword_count": 22,
+      "output_type": "Text",
+      "file": "notices.json"
+    },
+    {
+      "field_id": "original_lease_commencement_date",
+      "field_name": "Original Lease Commencement Date",
+      "category": "Basic Information",
+      "source_docx": "BASIC_INFORMATION.docx",
+      "question_count": 6,
+      "keyword_count": 36,
+      "output_type": "Number",
+      "file": "original_lease_commencement_date.json"
+    },
+    {
+      "field_id": "other_income_exterior_signage_storage",
+      "field_name": "Other Income (Exterior Signage/ Storage)",
+      "category": "Reimbursements",
+      "source_docx": "REIMBURSEMENTS.docx",
+      "question_count": 2,
+      "keyword_count": 11,
+      "output_type": "Text",
+      "file": "other_income_exterior_signage_storage.json"
+    },
+    {
+      "field_id": "parking",
+      "field_name": "Parking",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 2,
+      "keyword_count": 12,
+      "output_type": "Text",
+      "file": "parking.json"
+    },
+    {
+      "field_id": "percentage_rent",
+      "field_name": "Percentage Rent",
+      "category": "Financial Clauses",
+      "source_docx": "FINANCIAL_TERMS.docx",
+      "question_count": 3,
+      "keyword_count": 6,
+      "output_type": "Text",
+      "file": "percentage_rent.json"
+    },
+    {
+      "field_id": "permitted_use",
+      "field_name": "Permitted Use",
+      "category": "Critical Clauses",
+      "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 12,
+      "output_type": "Text",
+      "file": "permitted_use.json"
+    },
+    {
+      "field_id": "pro_rata",
+      "field_name": "Pro Rata %",
+      "category": "Reimbursements",
+      "source_docx": "Questions.xlsx",
+      "question_count": 10,
+      "keyword_count": 32,
+      "output_type": "Number",
+      "file": "pro_rata.json"
+    },
+    {
+      "field_id": "property_name",
+      "field_name": "Property name",
+      "category": "Basic Information",
+      "source_docx": "BASIC_INFORMATION.docx",
+      "question_count": 4,
+      "keyword_count": 8,
+      "output_type": "Text",
+      "file": "property_name.json"
+    },
+    {
+      "field_id": "purchase_option",
+      "field_name": "Purchase Option",
+      "category": "Critical Clauses",
+      "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 6,
+      "output_type": "Text",
+      "file": "purchase_option.json"
+    },
+    {
+      "field_id": "re_taxes",
+      "field_name": "RE Taxes",
+      "category": "Reimbursements",
+      "source_docx": "REIMBURSEMENTS.docx",
+      "question_count": 9,
+      "keyword_count": 15,
+      "output_type": "Text",
+      "file": "re_taxes.json"
+    },
+    {
+      "field_id": "relocation",
+      "field_name": "Relocation",
+      "category": "Critical Clauses",
+      "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 7,
+      "output_type": "Text",
+      "file": "relocation.json"
+    },
+    {
+      "field_id": "renewal_options",
+      "field_name": "Renewal Options",
+      "category": "Critical Clauses",
+      "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 15,
+      "output_type": "Text",
+      "file": "renewal_options.json"
+    },
+    {
+      "field_id": "rent_commencement_date",
+      "field_name": "Rent Commencement Date",
+      "category": "Basic Information",
+      "source_docx": "BASIC_INFORMATION.docx",
+      "question_count": 6,
+      "keyword_count": 7,
+      "output_type": "Number",
+      "file": "rent_commencement_date.json"
+    },
+    {
+      "field_id": "repair_and_maintenance",
+      "field_name": "Repair and Maintenance",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 38,
+      "output_type": "Text",
+      "file": "repair_and_maintenance.json"
+    },
+    {
+      "field_id": "reporting_of_financial_information",
+      "field_name": "Reporting of Financial Information",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 7,
+      "output_type": "Text",
+      "file": "reporting_of_financial_information.json"
+    },
+    {
+      "field_id": "reporting_of_gross_sales",
+      "field_name": "Reporting of Gross Sales",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 7,
+      "output_type": "Text",
+      "file": "reporting_of_gross_sales.json"
+    },
+    {
+      "field_id": "right_of_expansion",
+      "field_name": "Right of Expansion",
+      "category": "Critical Clauses",
+      "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 3,
+      "output_type": "Text",
+      "file": "right_of_expansion.json"
+    },
+    {
+      "field_id": "rofo",
+      "field_name": "ROFO",
+      "category": "Critical Clauses",
+      "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 5,
+      "output_type": "Text",
+      "file": "rofo.json"
+    },
+    {
+      "field_id": "rofr",
+      "field_name": "ROFR",
+      "category": "Critical Clauses",
+      "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 7,
+      "output_type": "Text",
+      "file": "rofr.json"
+    },
+    {
+      "field_id": "rules_and_regulations",
+      "field_name": "Rules and Regulations",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 13,
+      "output_type": "Text",
+      "file": "rules_and_regulations.json"
+    },
+    {
+      "field_id": "sales_kick_out",
+      "field_name": "Sales Kick-Out",
+      "category": "Critical Clauses",
+      "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 6,
+      "output_type": "Text",
+      "file": "sales_kick_out.json"
+    },
+    {
+      "field_id": "security_deposit",
+      "field_name": "Security Deposit",
+      "category": "Financial Clauses",
+      "source_docx": "FINANCIAL_TERMS.docx",
+      "question_count": 1,
+      "keyword_count": 9,
+      "output_type": "Number",
+      "file": "security_deposit.json"
+    },
+    {
+      "field_id": "state",
+      "field_name": "State",
+      "category": "Basic Information",
+      "source_docx": "BASIC_INFORMATION.docx",
+      "question_count": 4,
+      "keyword_count": 4,
+      "output_type": "Text",
+      "file": "state.json"
+    },
+    {
+      "field_id": "street_address",
+      "field_name": "Street Address",
+      "category": "Basic Information",
+      "source_docx": "BASIC_INFORMATION.docx",
+      "question_count": 4,
+      "keyword_count": 5,
+      "output_type": "Text",
+      "file": "street_address.json"
+    },
+    {
+      "field_id": "sublease_provision",
+      "field_name": "Sublease Provision",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 9,
+      "output_type": "Text",
+      "file": "sublease_provision.json"
+    },
+    {
+      "field_id": "subordination",
+      "field_name": "Subordination",
+      "category": "Other Lease Clauses",
+      "source_docx": "OTHER_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 22,
+      "output_type": "Text",
+      "file": "subordination.json"
+    },
+    {
+      "field_id": "suite",
+      "field_name": "Suite",
+      "category": "Basic Information",
+      "source_docx": "BASIC_INFORMATION.docx",
+      "question_count": 1,
+      "keyword_count": 10,
+      "output_type": "Text",
+      "file": "suite.json"
+    },
+    {
+      "field_id": "tenant_insurance_requirements",
+      "field_name": "Tenant Insurance Requirements",
+      "category": "Reimbursements",
+      "source_docx": "REIMBURSEMENTS.docx",
+      "question_count": 2,
+      "keyword_count": 8,
+      "output_type": "Text",
+      "file": "tenant_insurance_requirements.json"
+    },
+    {
+      "field_id": "tenant_name",
+      "field_name": "Tenant Name",
+      "category": "Basic Information",
+      "source_docx": "BASIC_INFORMATION.docx",
+      "question_count": 2,
+      "keyword_count": 12,
+      "output_type": "Text",
+      "file": "tenant_name.json"
+    },
+    {
+      "field_id": "tenant_termination",
+      "field_name": "Tenant Termination",
+      "category": "Critical Clauses",
+      "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+      "question_count": 1,
+      "keyword_count": 14,
+      "output_type": "Text",
+      "file": "tenant_termination.json"
+    },
+    {
+      "field_id": "term_commencement_date",
+      "field_name": "Term Commencement date",
+      "category": "Basic Information",
+      "source_docx": "BASIC_INFORMATION.docx",
+      "question_count": 5,
+      "keyword_count": 9,
+      "output_type": "Number",
+      "file": "term_commencement_date.json"
+    },
+    {
+      "field_id": "utilities",
+      "field_name": "Utilities",
+      "category": "Reimbursements",
+      "source_docx": "REIMBURSEMENTS.docx",
+      "question_count": 2,
+      "keyword_count": 18,
+      "output_type": "Text",
+      "file": "utilities.json"
+    }
+  ]
+}

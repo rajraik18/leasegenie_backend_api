@@ -1,0 +1,261 @@
+{
+  "field_id": "re_taxes",
+  "field_name": "RE Taxes",
+  "category": "Reimbursements",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "REIMBURSEMENTS.docx",
+  "overview": "Extract the amount against the keyword provided above. If only the amount is provided, it is safe to assume the amount is a fixed amount for possibly the initial period or the term based on language to be read in the body of the lease. Abstract the information from the defined point of identification of this word till the end of the paragraph \u2192 Go to Question 4. Fixed at Tenant to pay $ Tenant pays $",
+  "preliminary": [
+    "REIMBURSEMENTS \u2013 MASTER ABSTRACTION GUIDE",
+    "(CAM | RE Taxes | Landlord Insurance| Other Income, Advertising and Marketing| Tenant Insurance Requirements)",
+    "General Applicability: All leases (Office, Retail and Industrial)",
+    "Summary",
+    "Definitions",
+    "Utilities section",
+    "CAM section",
+    "Taxes section",
+    "Insurance section",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "No Payments",
+      "question_text": "Does the lease contain a summary page?",
+      "extraction_hint": "Extract \"No Recovery\"",
+      "output_type": "Text",
+      "search_scope": "summary",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": "Please note, an amount with est prior or later or with any language prior or later will required to be abstracted in full. These amounts are not considered to be hard coded amounts; however, this will have to be read in conjunction with the information from the section in the body of the lease.Critical point the conclusion of the type of reimbursement can only be arrived by reading this clause in conjunction with the information from the body of the lease.Sometimes the information against the key word may be a term like \u201cGross\u201d, \u201cNet\u201d or \u201cModified Gross\u201d or Base Year or BY. Please note, an amount with est prior or later or with any language prior or later will required to be abstracted in full. These amounts are not considered to be hard coded amounts; however, this will have to be read in conjunction with the information from the section in the body of the lease.Critical point the conclusion of the type of reimbursement can only be arrived by reading this clause in conjunction with the information from the body of the lease.Sometimes the information against the key word may be a term like \u201cGross\u201d, \u201cNet\u201d or \u201cModified Gross\u201d or Base Year or BY.\nPlease note, typically if the common area summary is provided it is fair to assume the lease will use the same language in the body of the lease. E.g. If the summary uses the word RE Taxes, it is fair to assume the lease will also provide reference only to RE Taxes and so on. Another point to note, if the summary or the lease body states Operating Costs, the clause Operating Costs may include costs of Insurance and Taxes as well. Please note, typically if the common area summary is provided it is fair to assume the lease will use the same language in the body of the lease. E.g. If the summary uses the word RE Taxes, it is fair to assume the lease will also provide reference only to RE Taxes and so on. Another point to note, if the summary or the lease body states Operating Costs, the clause Operating Costs may include costs of Insurance and Taxes as well. If a text is provided against the Keyword, abstract the text as it is and provide the same."
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Included in Rent",
+      "question_text": "Does the lease contain any clause that refers to RE Taxes, Taxes, Real Property Taxes or any of the RE Taxes keywords listed below?",
+      "extraction_hint": "Extract \"No Recovery\"",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "flag",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": "Note: the subsections will include additional information including RE Taxes Inclusions and Exclusions, the amount to be paid and any increase to the amount specified in the summary.Note: the subsections will include additional information including RE Taxes Inclusions and Exclusions, the amount to be paid and any increase to the amount specified in the summary.Capture all the details from the subsections \u2192 Go to Question 3.\nNote: there is no situation, the lease does not contain any of the details listed part of Question 2 above.Note: there is no situation, the lease does not contain any of the details listed part of Question 2 above."
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "Estimated Amount",
+      "question_text": "Does the lease provide details of RE Taxes Recovery type or structure?",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "flag",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q4",
+      "priority": 4,
+      "condition_type": "Included in CAM",
+      "question_text": "Does the RE Taxes clause in the body of the lease include any of the Mod. Gross Keywords relating to the calculation of Modified Gross calculation or Base Year stop calculation?",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "body",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q5",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q5",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": "Note: In some instances, the definition of the Base years may be provided in the summary section and the detailed section will describe only the inclusions and exclusions.Note: In some instances, the definition of the Base years may be provided in the summary section and the detailed section will describe only the inclusions and exclusions."
+    },
+    {
+      "id": "Q5",
+      "priority": 5,
+      "condition_type": "Separate Charge",
+      "question_text": "Does the RE Taxes clause in the body of the lease include any of the key words indicating Fixed Taxes Payments?",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "body",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q6",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": null,
+      "red_flag": null,
+      "notes": "Note: Note in leases it is possible that only one of the questions from 3 through 5 are possible. It is not possible for all the three questions to have an answer that is \u201cYes\u201d).Note: Note in leases it is possible that only one of the questions from 3 through 5 are possible. It is not possible for all the three questions to have an answer that is \u201cYes\u201d).If No  Go to Question 6"
+    },
+    {
+      "id": "Q6",
+      "priority": 6,
+      "condition_type": "Fixed Payments",
+      "question_text": "Is the share the tenant must pay \u201cTenant\u2019s Share\u201d defined?",
+      "extraction_hint": "Extract rate per SF with annual increases percentage",
+      "output_type": "Amount",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q7",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q7",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": "Note: Please note, the section will always include a \u201cNumerator\u201d and a \u201cDenominator\u201d The numerator will typically be defined as \u201cLeases premises\u201d, \u201cPremises\u201d, Leased Area, \u201cNet Rentable area of Tenant\u201d, Gross Leasable area of tenant\u201dThe key word for \u201cDenominator\u201d could be denominator1.Ensure the Denominator includes all details relating to definition of any exclusions2.Exclusions may exclude Major Tenant, Anchor Tenant, (OR)3.Inclusions may include in-line tenant spaces.4.Please note it is critical to extract the details of the definition of all these tenants as well.Note: Please note, the section will always include a \u201cNumerator\u201d and a \u201cDenominator\u201d The numerator will typically be defined as \u201cLeases premises\u201d, \u201cPremises\u201d, Leased Area, \u201cNet Rentable area of Tenant\u201d, Gross Leasable area of tenant\u201dThe key word for \u201cDenominator\u201d could be denominator1.Ensure the Denominator includes all details relating to definition of any exclusions2.Exclusions may exclude Major Tenant, Anchor Tenant, (OR)3.Inclusions may include in-line tenant spaces.4.Please note it is critical to extract the details of the definition of all these tenants as well."
+    },
+    {
+      "id": "Q7",
+      "priority": 7,
+      "condition_type": "Net Payments",
+      "question_text": "Does the RE Taxes clause include any language related to Proposition 13 paid by the Tenant?",
+      "extraction_hint": "Extract %",
+      "output_type": "Numeric",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q8",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q8",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q8",
+      "priority": 8,
+      "condition_type": "Mod. Gross Payments",
+      "question_text": "Does the RE Taxes included in Base Rent paid by the Tenant and there is no separate charge?",
+      "extraction_hint": "Extract % with Base year/Base year amount",
+      "output_type": "Numeric/Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "literal",
+        "goto": null,
+        "literal": "No Recovery",
+        "also_extract": false
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q9",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q9",
+      "priority": 9,
+      "condition_type": "Definition Based",
+      "question_text": "Does the RE Taxes included in Operating Expenses paid by the Tenant and there is no separate charge?",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "finalize",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Tax Obligations",
+    "Taxes and Assessments",
+    "Tax Payments",
+    "Real Estate Taxes and Insurance",
+    "Real Property Taxes",
+    "Taxes",
+    "Taxes, Insurance Expenses, and CAM Charges",
+    "Real Property Tax",
+    "Tenant's Tax Payment",
+    "Real estate Tax Increase",
+    "Change in Ownership",
+    "Taxes on sale",
+    "Real Estate Taxes",
+    "Property Taxes",
+    "Property Tax"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

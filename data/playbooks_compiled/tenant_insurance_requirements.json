@@ -1,0 +1,91 @@
+{
+  "field_id": "tenant_insurance_requirements",
+  "field_name": "Tenant Insurance Requirements",
+  "category": "Reimbursements",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "REIMBURSEMENTS.docx",
+  "overview": "Extract the language against the keyword provided above. Capture all the details from the sections against the Tenant Insurance Requirements keywords.",
+  "preliminary": [
+    "REIMBURSEMENTS \u2013 MASTER ABSTRACTION GUIDE",
+    "(CAM | RE Taxes | Landlord Insurance| Other Income, Advertising and Marketing| Tenant Insurance Requirements)",
+    "General Applicability: All leases (Office, Retail and Industrial)",
+    "Summary",
+    "Definitions",
+    "Utilities section",
+    "CAM section",
+    "Taxes section",
+    "Insurance section",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Definition Based",
+      "question_text": "Does the lease contain a summary page?",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "summary",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Self Insurance",
+      "question_text": "Does the lease contain any clause that refers to Tenant Insurance Requirements?",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Insurance",
+    "Tenant's Insurance",
+    "Tenant Insurance",
+    "Tenant Insurance Requirements",
+    "Tenant to maintain",
+    "Insurance Expense",
+    "Insurance and Indemnity",
+    "Personal Property Insurance"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

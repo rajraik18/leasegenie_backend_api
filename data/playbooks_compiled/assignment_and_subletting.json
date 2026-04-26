@@ -1,0 +1,78 @@
+{
+  "field_id": "assignment_and_subletting",
+  "field_name": "Assignment and Subletting",
+  "category": "Other Lease Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "OTHER_LEASE_CLAUSES.docx",
+  "overview": "An assignment is the transfer of the entire remaining interest in the lease from the current tenant (assignor) to a new tenant (assignee). Subletting occurs when a tenant (sublessor) leases part or all of the premises to a new tenant (subtenant) for a portion of the term, or for the whole term but under different conditions",
+  "preliminary": [
+    "OTHER LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "(Allowance | Alteration | Assignment and Subletting| Casualty| Condemnation | Hazardous Materials | Holdover | Landlord Restriction | Monetary Default | Non \u2013 Monetary Default | Parking | Repair and Maintenance | Reporting of Financial Information | Reporting of Gross Sales | Sublease Provision | Subordination)",
+    "General Applicability: All leases (Office, Retail and Industrial) except for,",
+    "Reporting of Gross Sales \u2013 Applicable only in Retail leases",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Permitted with Consent",
+      "question_text": "Does the lease contain any clause that refers to Assignment and Subletting keywords?",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Sublease",
+    "Assignment, Subletting and Transfers by Tenant",
+    "Assignment and Subletting",
+    "Assignment, Subletting, Mortgage, etc.",
+    "Tenant Affiliate",
+    "Permitted Transfer",
+    "Assignment and Sublease",
+    "Assignment, Subletting and  Mortgaging",
+    "Sublease Additional Rent",
+    "Tenant Assignment and Subletting",
+    "Transfer",
+    "Prime Landlord Consent to Sublease",
+    "Assignment or Subletting",
+    "Assignment",
+    "Assignment, Subletting and Ownership",
+    "Transfers",
+    "Tenant Transfers",
+    "Assignment, Subletting, and Mortgaging by Tenant",
+    "Assignment, Mortgaging and Subletting",
+    "Assignment, Mortgage",
+    "Assignment or Sublease"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

@@ -1,0 +1,87 @@
+{
+  "field_id": "casualty",
+  "field_name": "Casualty",
+  "category": "Other Lease Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "OTHER_LEASE_CLAUSES.docx",
+  "overview": "A casualty clause in a lease outlines the rights and obligations of landlords and tenants if the premises are damaged or destroyed by unforeseen events like fire, flood, or natural disasters. It typically dictates repair responsibilities, rent abatement, and termination rights, often allowing for lease termination if restoration is impractical or occurs near the end of the term.",
+  "preliminary": [
+    "OTHER LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "(Allowance | Alteration | Assignment and Subletting| Casualty| Condemnation | Hazardous Materials | Holdover | Landlord Restriction | Monetary Default | Non \u2013 Monetary Default | Parking | Repair and Maintenance | Reporting of Financial Information | Reporting of Gross Sales | Sublease Provision | Subordination)",
+    "General Applicability: All leases (Office, Retail and Industrial) except for,",
+    "Reporting of Gross Sales \u2013 Applicable only in Retail leases",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Definition Based",
+      "question_text": "Does the lease contain any clause that refers to Casualty keywords?",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Casualty",
+    "Property and Casualty Damage",
+    "Damage or Destruction",
+    "Destruction of Premises",
+    "Destruction by Fire or Other Clause",
+    "Fire",
+    "Damage",
+    "Property Insurance, Rebuilding and Waiver of Subrogation",
+    "Restoration",
+    "Damage by Casualty",
+    "Rebuilding",
+    "Fire or Other Casualty: Casualty Insurance",
+    "Substantial Destruction of the Building",
+    "Damage and Destruction",
+    "Partial Destruction of the Building",
+    "Destruction During Last Two Years of Lease Term",
+    "Damage by Fire or Other Causes",
+    "Casualty Damage",
+    "Damage to Leased Premises",
+    "Minor Damage",
+    "Destruction of the Leased Premises",
+    "Indemnity and Risk of Injury, Loss and Damage",
+    "Damage and Restoration",
+    "Fire and Casualty",
+    "Fire or Casualty",
+    "Fire and other Casualty",
+    "Fre Requirement",
+    "Destruction/Damage",
+    "Loss due to Casualty",
+    "Casualty and Damage"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

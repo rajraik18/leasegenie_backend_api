@@ -1,0 +1,112 @@
+{
+  "field_id": "indemnification",
+  "field_name": "Indemnification",
+  "category": "Other Lease Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "OTHER_LEASE_CLAUSES.docx",
+  "overview": "An indemnification clause allocates legal and financial risk between Landlord and Tenant for third-party claims arising from use of the Premises. A typical clause contains: (a) Tenant's obligation to indemnify Landlord for claims arising from Tenant's use, occupancy, or acts/omissions of its agents, and (b) often, Landlord's reciprocal obligation to indemnify Tenant for claims arising from Landlord's negligence or willful misconduct. The clause works in tandem with the parties' insurance obligations \u2014 in most cases the indemnitor's insurance is the first source of recovery.",
+  "preliminary": [
+    "OTHER LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "General Applicability: All leases (Office, Retail and Industrial).",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Definition Based",
+      "question_text": "Does the lease contain indemnification obligations?",
+      "extraction_hint": "Extract the full indemnification clause(s), identifying separately: (a) Tenant-indemnifies-Landlord, (b) Landlord-indemnifies-Tenant (if mutual), (c) any carve-outs or exclusions.",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [
+        "indemnify",
+        "indemnification",
+        "hold harmless",
+        "defend and hold"
+      ],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "literal",
+        "goto": null,
+        "literal": "None",
+        "also_extract": false
+      },
+      "red_flag": "Flag if Tenant indemnifies Landlord for Landlord's own negligence (unusual and unfavorable to Tenant).",
+      "notes": "Common locations: Section 15 + 7.3 (HMBP-BCP), Paragraph 18 (ProLogis)."
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Yes/No",
+      "question_text": "Is the indemnification mutual (both parties indemnify each other)?",
+      "extraction_hint": "Determine if Landlord also indemnifies Tenant. If yes, extract the Landlord-to-Tenant indemnity.",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [
+        "Landlord agrees to indemnify",
+        "Landlord shall indemnify",
+        "Landlord hereby indemnifies"
+      ],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": "Mutual indemnification",
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "literal",
+        "goto": null,
+        "literal": "One-way (Tenant indemnifies Landlord only)",
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Indemnification",
+    "Indemnity",
+    "indemnify",
+    "indemnify, defend, and hold harmless",
+    "indemnify and hold harmless",
+    "defend and hold harmless",
+    "save and hold harmless",
+    "against any and all losses, liabilities, damages",
+    "costs and expenses",
+    "attorneys' fees",
+    "attorney fees",
+    "claims by third parties",
+    "third-party claims",
+    "except for the negligence of Landlord",
+    "mutual indemnification"
+  ],
+  "summary_keywords": [
+    "Indemnification",
+    "Indemnity",
+    "indemnify",
+    "indemnify, defend, and hold harmless",
+    "indemnify and hold harmless",
+    "defend and hold harmless",
+    "save and hold harmless",
+    "against any and all losses, liabilities, damages"
+  ],
+  "amendment_controls": true,
+  "depends_on": []
+}

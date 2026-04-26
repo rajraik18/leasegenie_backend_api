@@ -1,0 +1,59 @@
+flowchart TD
+    User([Client]) -->|GET /tenants/TENANT_ID/abstraction| API[abstraction.get_abstraction]
+    API --> Build[build_abstraction]
+
+    Build --> FetchTenant[Fetch Tenant + Property<br/>from DB]
+    FetchTenant -->|not found| Err404[404 not found]
+
+    FetchTenant --> FilterScope[Filter 72 fields by<br/>abstract_type × property_type<br/>from reference_data]
+
+    FilterScope --> FetchDocs[Sort tenant.documents<br/>by document_order<br/>0 = base, 1..7 = amendments]
+
+    FetchDocs --> IndexFV[Index tenant.field_values<br/>as field_id, doc_id → FieldValue]
+
+    IndexFV --> LoadOverrides[Load FieldOverride rows<br/>for this tenant<br/>→ field_id → override]
+
+    LoadOverrides --> FieldLoop{For each field in scope}
+
+    FieldLoop --> BuildPerDoc[For each document:<br/>fetch FieldValue,<br/>assemble FieldValueOut<br/>value, confidence,<br/>page_number, clause_number,<br/>clause_text,<br/>condition_type_taken,<br/>red_flags, needs_review,<br/>trace_summary]
+
+    BuildPerDoc --> BuildInputs[Build DocumentValueInputs<br/>one per doc,<br/>carrying value + confidence<br/>+ page + clause + clause_text]
+
+    BuildInputs --> HasOverride{Override<br/>exists?}
+    HasOverride -->|yes| UseOverride[concluded_value = override.value<br/>concluded_source = 'override'<br/>confidence = 1.0<br/>source_document_label = 'Override']
+    HasOverride -->|no| FindAmend{Any amendment<br/>with real value?}
+
+    FindAmend -->|yes| LatestAmend[Sort amendments by<br/>effective_date DESC<br/>take winner]
+    LatestAmend --> UseAmend[concluded_value = amend.value<br/>concluded_source = 'amendment_N'<br/>confidence = amend.confidence<br/>page_number = amend.page<br/>clause_number = amend.clause<br/>clause_text = amend.clause_text<br/>source_document_id/label]
+
+    FindAmend -->|no| FindBase{Base lease<br/>has value?}
+    FindBase -->|yes| UseBase[concluded_value = base.value<br/>concluded_source = 'base_lease'<br/>confidence = base.confidence<br/>page_number / clause /<br/>clause_text all from base]
+
+    FindBase -->|no| FindFallback{Any doc has<br/>clause_text<br/>as context?}
+    FindFallback -->|yes| UseFallback[concluded_value = 'None'<br/>but page/clause/clause_text<br/>from best fallback doc<br/>confidence = 0.0]
+    FindFallback -->|no| NoneResult[concluded_value = 'None'<br/>all citation fields null<br/>confidence = 0.0]
+
+    UseOverride --> DeriveBand
+    UseAmend --> DeriveBand
+    UseBase --> DeriveBand
+    UseFallback --> DeriveBand
+    NoneResult --> DeriveBand
+
+    DeriveBand[confidence_band:<br/>≥0.8 → high<br/>≥0.5 → medium<br/>>0 → low<br/>=0 → none]
+
+    DeriveBand --> AppendField[Append AbstractedField<br/>to fields list]
+    AppendField --> FieldLoop
+
+    FieldLoop -->|all fields done| Summary[Build AbstractionSummary:<br/>total_fields<br/>fields_extracted<br/>fields_none<br/>fields_overridden<br/>fields_flagged_review<br/>mean_confidence<br/>high/medium/low counts]
+
+    Summary --> Assemble[TenantAbstractionOut:<br/>tenant info, documents,<br/>fields array,<br/>summary block]
+
+    Assemble -->|200 OK| Response([{<br/>  tenant_id,<br/>  fields: [{<br/>    concluded_value,<br/>    concluded_confidence: 0.92,<br/>    confidence_level: 'high',<br/>    source_document_label: 'Amendment 1',<br/>    page_number: 2,<br/>    clause_number: '5.1',<br/>    per_document: [...]<br/>  }],<br/>  summary: { mean_confidence: 0.83 }<br/>}])
+
+    style User fill:#2d6cdf,color:#fff
+    style Response fill:#2ea043,color:#fff
+    style Err404 fill:#dc2626,color:#fff
+    style UseOverride fill:#a855f7,color:#fff
+    style UseAmend fill:#f97316,color:#fff
+    style UseBase fill:#fbbf24,color:#000
+    style Summary fill:#06b6d4,color:#fff

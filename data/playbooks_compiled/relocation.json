@@ -1,0 +1,77 @@
+{
+  "field_id": "relocation",
+  "field_name": "Relocation",
+  "category": "Critical Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+  "overview": "A relocation clause in a commercial lease allows a landlord to move a tenant to a different, usually similar, space within the same building or complex, often to accommodate larger tenants or optimize space usage. It is common in retail/office leases and typically requires the landlord to cover all moving costs, ensuring no out-of-pocket expenses for the tenant.",
+  "preliminary": [
+    "CRITICAL LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "(Continuous Operation | Contraction Option| Co-Tenancy| Exclusive Use| Go-Dark| Landlord\u2019s Recapture Rights | Permitted Use| Purchase Option| Relocation | Renewal Rights | Right of Expansion | ROFO | ROFR| Sales Kick-Out| Tenant Termination | Landlord Termination)",
+    "Summary",
+    "Definitions",
+    "Continuous Operation",
+    "Contraction Option",
+    "Co-Tenancy",
+    "Exclusive Use",
+    "Go-Dark",
+    "Landlord's Recapture Rights",
+    "Permitted Use",
+    "Purchase Option",
+    "Relocation",
+    "Renewal Options",
+    "Right of Expansion",
+    "ROFO",
+    "ROFR",
+    "Sales Kick-Out",
+    "Tenant Termination",
+    "Landlord Termination",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Right Granted",
+      "question_text": "Does the lease contain any clause that refers to Relocation keywords?",
+      "extraction_hint": "Relocation clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "LL's Right to relocate",
+    "Landlord Right to relocate",
+    "Relocation",
+    "Landlord Right",
+    "Substitute Rights",
+    "Substitute Location",
+    "Relocate"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

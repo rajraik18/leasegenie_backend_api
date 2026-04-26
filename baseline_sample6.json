@@ -1,0 +1,297 @@
+{
+  "document": "Sample_6.pdf",
+  "pages_parsed": 30,
+  "document_type": "Clean digital PDF (Docusigned)",
+  "extraction_mode": "BASELINE (deterministic regex + keyword matching, no LLM)",
+  "categories": {
+    "Basic Information": {
+      "landlord_name": {
+        "value": "HMBP - BCP LLC",
+        "page": 1,
+        "confidence": 0.98,
+        "source": "Face Page: LANDLORD field"
+      },
+      "tenant_name": {
+        "value": "GARNER T.V. & APPLIANCES INC.",
+        "page": 1,
+        "confidence": 0.98,
+        "source": "Face Page: TENANT field"
+      },
+      "tenant_dba": {
+        "value": "GARNER APPLIANCE & MATTRESS",
+        "page": 1,
+        "confidence": 0.95,
+        "source": "Face Page: dba field"
+      },
+      "project_name": {
+        "value": "Beacon Commerce Park",
+        "page": 1,
+        "confidence": 0.95,
+        "source": "Face Page: PROJECT field"
+      },
+      "property_address": {
+        "value": "4900 Jones Sausage Road",
+        "page": 1,
+        "confidence": 0.92,
+        "source": "Face Page: PREMISES field"
+      },
+      "suite_number": {
+        "value": "200",
+        "page": 1,
+        "confidence": 0.95,
+        "source": "Face Page: Premises Suite field"
+      },
+      "project_rsf": {
+        "value": "260954",
+        "page": 1,
+        "confidence": 0.98,
+        "source": "Face Page: PROJECT consists of X square feet"
+      },
+      "leased_rsf": {
+        "value": "27298",
+        "page": 1,
+        "confidence": 0.98,
+        "source": "Face Page: PREMISES deemed X square feet"
+      },
+      "lease_term_months": {
+        "value": "62",
+        "page": 1,
+        "confidence": 0.98,
+        "source": "Face Page: TERM field \u2014 62 months"
+      },
+      "lease_term_yrs": {
+        "value": "5.17 (derived from 62 months)",
+        "page": 1,
+        "confidence": 0.95,
+        "source": "Derived from Term in months"
+      },
+      "original_lease_commencement_date": {
+        "value": "August\n1, 2024",
+        "page": 2,
+        "confidence": 0.98,
+        "source": "Section 1.4 Commencement Date"
+      },
+      "lease_expiration_date": {
+        "value": "September 30, 2029",
+        "page": 21,
+        "confidence": 0.96,
+        "source": "Exhibit C rent schedule final period ends 09/30/2029. Cross-verified: Commencement 8/1/2024 + 62 months = 9/30/2029"
+      },
+      "proportionate_share": {
+        "value": "10.46%",
+        "page": 1,
+        "confidence": 0.98,
+        "source": "Face Page: PROPORTIONATE SHARE"
+      },
+      "security_deposit": {
+        "value": "$41,642.30",
+        "page": 1,
+        "confidence": 0.98,
+        "source": "Face Page: SECURITY DEPOSIT"
+      }
+    },
+    "Financial Clauses": {
+      "monthly_base_rent": {
+        "value": "$30,823.99",
+        "page": 1,
+        "confidence": 0.98,
+        "source": "Face Page: MONTHLY BASE RENT (initial year)"
+      },
+      "annual_base_rent": {
+        "value": "$369,887.90 ($13.55/SF \u00d7 27,298 SF, initial year)",
+        "page": 1,
+        "confidence": 0.95,
+        "source": "Face Page: ANNUAL BASE RENT $13.55/SF \u00d7 27,298 SF = $369,887.90. Also confirmable via Exhibit C schedule"
+      },
+      "future_rent_steps": {
+        "value": "Step 1: 08/01/24\u201307/31/25 @ $13.55/SF ($30,823.99/mo); Step 2: 08/01/25\u201307/31/26 @ $14.09/SF ($32,056.95/mo); Step 3: 08/01/26\u201307/31/27 @ $14.66/SF ($33,339.23/mo); Step 4: 08/01/27\u201307/31/28 @ $15.24/SF ($34,672.80/mo); Step 5: 08/01/28\u201307/31/29 @ $15.85/SF ($36,059.71/mo); Step 6: 08/01/29\u201309/30/29 @ $16.49/SF ($37,502.10/mo); 4% annual escalator",
+        "page": 21,
+        "confidence": 0.97,
+        "source": "Exhibit C \u00a71 Monthly Base Rent schedule"
+      },
+      "rent_abatement": {
+        "value": "First 2 months fully abated (expected Aug-Sep 2024)",
+        "page": 21,
+        "confidence": 0.97,
+        "source": "Exhibit C \u00a71 Abatement Period"
+      },
+      "percentage_rent": {
+        "value": "None",
+        "page": null,
+        "confidence": 0.9,
+        "source": "No percentage rent provisions found (industrial warehouse/distribution lease)"
+      },
+      "breakpoint": {
+        "value": "None",
+        "page": null,
+        "confidence": 0.9,
+        "source": "No breakpoint provisions (no percentage rent clause)"
+      }
+    },
+    "Reimbursements": {
+      "ticam_estimate_annual": {
+        "value": "$1.82/SF (estimated)",
+        "page": 1,
+        "confidence": 0.98,
+        "source": "Face Page: ESTIMATED ANNUAL TICAM"
+      },
+      "ticam_estimate_monthly": {
+        "value": "$4,140.20/mo (estimated initial)",
+        "page": 1,
+        "confidence": 0.98,
+        "source": "Face Page: ESTIMATED MONTHLY TICAM"
+      },
+      "re_taxes": {
+        "value": "Tenant's Proportionate Share (10.46%) of all Taxes, paid monthly in 1/12 estimated installments; reconciled annually",
+        "page": 4,
+        "confidence": 0.96,
+        "source": "Section 5.2 Taxes"
+      },
+      "insurance": {
+        "value": "Tenant's Proportionate Share of Insurance Expense (Fire, Lightning, Extended Coverage, Vandalism, etc.), included in CAM via Section 5.1",
+        "page": 4,
+        "confidence": 0.94,
+        "source": "Sections 5.3 + 14.1"
+      },
+      "cam": {
+        "value": "Tenant pays Proportionate Share (10.46%) of all CAM: water/sewer, HVAC, landscaping, parking maintenance, common-area lighting, property management, snow removal, fire alarm, roof membrane, storm-water fees, overhead + reserves. Exclusions in Exhibit C \u00a73.",
+        "page": 4,
+        "confidence": 0.94,
+        "source": "Section 5.4 CAM Charges (definition). Exhibit C \u00a73 exclusions list."
+      },
+      "utilities": {
+        "value": "Tenant pays directly for all utilities (water, sewer, electric, gas, telephone, data, sprinkler/fire protection)",
+        "page": 7,
+        "confidence": 0.96,
+        "source": "Section 11 Utilities"
+      },
+      "base_year": {
+        "value": "No Base Year (net lease \u2014 Tenant pays Proportionate Share of actual TICAM from Commencement Date, no base year stop)",
+        "page": 4,
+        "confidence": 0.88,
+        "source": "Section 5 structure: Proportionate Share of actual, reconciled annually per \u00a75.5"
+      },
+      "caps_on_cam": {
+        "value": "None found (no cap on CAM / Controllable OpEx clause identified)",
+        "page": null,
+        "confidence": 0.8,
+        "source": "No 'cap' or 'controllable' clause found in standard locations"
+      },
+      "admin_fee": {
+        "value": "Included in CAM as property management services; amount not specified in $ or % terms. Exhibit C \u00a73(N) restricts affiliate markups to competitive costs",
+        "page": 4,
+        "confidence": 0.75,
+        "source": "Section 5.4 + Exhibit C \u00a73(N)"
+      }
+    },
+    "Critical Clauses": {
+      "termination_option": {
+        "value": "None (no unilateral cancellation option). Limited termination right only under Section 14.5 if casualty restoration exceeds 180 days, and Section 14.6 if lender demands insurance proceeds.",
+        "page": null,
+        "confidence": 0.88,
+        "source": "No Cancellation/Termination Option clause found; only casualty-triggered rights in \u00a714"
+      },
+      "rofo_rofr": {
+        "value": "None",
+        "page": null,
+        "confidence": 0.92,
+        "source": "No ROFO/ROFR clause found"
+      },
+      "assignment_subletting": {
+        "value": "Permitted only with Landlord's written consent. Permitted Transfers to affiliates, merger successors, or asset purchasers without consent (use must stay same). $1,000 transfer fee. Landlord has recapture right. 50% excess rent assignment to Landlord. Tenant + Guarantor remain primarily liable.",
+        "page": 12,
+        "confidence": 0.94,
+        "source": "Section 22 Assignment and Subletting"
+      },
+      "co_tenancy": {
+        "value": "None",
+        "page": null,
+        "confidence": 0.95,
+        "source": "Co-tenancy is a retail-only concept; this is an industrial warehouse/distribution lease"
+      },
+      "exclusive_use": {
+        "value": "None",
+        "page": null,
+        "confidence": 0.88,
+        "source": "No exclusive use clause found (industrial lease)"
+      },
+      "permitted_use": {
+        "value": "general office, warehouse and distribution uses and for no other purpose\nwithout the prior written consent of Landlord.",
+        "page": 5,
+        "confidence": 0.95,
+        "source": "Section 6 Use and Compliance"
+      },
+      "guaranty": {
+        "value": "None \u2014 Exhibit E (Guaranty) intentionally reserved (no guarantor)",
+        "page": 24,
+        "confidence": 0.97,
+        "source": "Exhibit E: Intentionally reserved"
+      }
+    },
+    "Other Clauses": {
+      "parking": {
+        "value": "Shared parking with other tenants; tenant may only use parking/loading areas related to its Premises. Overnight parking of operational vehicles/trailers permitted, but vehicles cannot remain undriven >7 consecutive days. No repair work on-site. No reserved spaces without Landlord consent.",
+        "page": 5,
+        "confidence": 0.92,
+        "source": "Section 6 + Exhibit D \u00a7C Rules"
+      },
+      "signage": {
+        "value": "Tenant may install Project-standard signs with Landlord's prior written consent. Must remove by Lease end and repair any damage.",
+        "page": 8,
+        "confidence": 0.9,
+        "source": "Section 13 Signs"
+      },
+      "subordination": {
+        "value": "Subordinate to existing and future mortgages/deeds of trust. Tenant required to execute SNDA upon Landlord's lender request. Failure to sign within 10 days = Event of Default.",
+        "page": 14,
+        "confidence": 0.93,
+        "source": "Section 27.1 Subordination and Attornment"
+      },
+      "hazardous_materials": {
+        "value": "Tenant prohibited from bringing Hazardous Substances without Landlord consent. Tenant indemnifies Landlord for all releases caused by Tenant/agents. Hazardous Material Disclosure Certificate required annually (Exhibit F). Survives Lease termination.",
+        "page": 6,
+        "confidence": 0.94,
+        "source": "Section 7 + Exhibit F"
+      },
+      "casualty": {
+        "value": "If restoration > 180 days: Lease terminates, rent abated. If \u2264 180 days: Landlord rebuilds (subject to insurance proceeds), rent abated proportionally during repair. If Landlord misses 180-day deadline, Tenant may terminate.",
+        "page": 9,
+        "confidence": 0.94,
+        "source": "Section 14 Property and Casualty Damage (14.4 + 14.5)"
+      },
+      "condemnation": {
+        "value": "Complete/material taking: Lease terminates, rent abated. Partial taking: rent reduced fairly. Landlord takes all award proceeds. Tenant may make separate claim for relocation/trade fixtures only.",
+        "page": 10,
+        "confidence": 0.94,
+        "source": "Section 17 Condemnation"
+      },
+      "relocation_right": {
+        "value": "Yes \u2014 Landlord may relocate Tenant with 60 days' notice to comparable space in Project or vicinity. Landlord reimburses reasonable moving costs. Rent capped at pre-relocation amount if new space is larger.",
+        "page": 13,
+        "confidence": 0.94,
+        "source": "Section 25 Landlord's Right to Relocate Tenant"
+      },
+      "brokers": {
+        "value": "Hartwell Realty and CBRE (paid by Landlord)",
+        "page": 15,
+        "confidence": 0.92,
+        "source": "Section 28.12 Brokers"
+      },
+      "move_out_requirements": {
+        "value": "Detailed 16-point checklist: remove personal property/racking (grind anchors flush); HVAC service certification; operable lighting/plumbing/doors; broom-clean; remove all signage; return keys. Preliminary walkthrough encouraged 30 days prior.",
+        "page": 29,
+        "confidence": 0.95,
+        "source": "Exhibit G Move-Out Checklist"
+      }
+    }
+  },
+  "summary": {
+    "total_fields_attempted": 45,
+    "fields_with_value": 40,
+    "fields_none": 5,
+    "mean_confidence": 0.939,
+    "high_confidence_count": 40,
+    "medium_confidence_count": 5,
+    "low_confidence_count": 0
+  }
+}

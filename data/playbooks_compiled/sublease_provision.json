@@ -1,0 +1,66 @@
+{
+  "field_id": "sublease_provision",
+  "field_name": "Sublease Provision",
+  "category": "Other Lease Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "OTHER_LEASE_CLAUSES.docx",
+  "overview": "A sublease provision in a lease agreement\u00a0governs a tenant's right to rent out all or part of a property to a third party (sublessee), usually requiring the landlord\u2019s prior written consent. It establishes that the original tenant remains responsible for rent and obligations to the landlord, while acting as a \"middleman\" to the subtenant.",
+  "preliminary": [
+    "OTHER LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "(Allowance | Alteration | Assignment and Subletting| Casualty| Condemnation | Hazardous Materials | Holdover | Landlord Restriction | Monetary Default | Non \u2013 Monetary Default | Parking | Repair and Maintenance | Reporting of Financial Information | Reporting of Gross Sales | Sublease Provision | Subordination)",
+    "General Applicability: All leases (Office, Retail and Industrial) except for,",
+    "Reporting of Gross Sales \u2013 Applicable only in Retail leases",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "No Sublease",
+      "question_text": "Does the lease contain any clause that refers to Sublease Provision keywords?",
+      "extraction_hint": "Record None",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Sublease",
+    "Sublessee",
+    "Subtenant",
+    "Sub-subtenant",
+    "Sub-Sublessee",
+    "Sublease Rent",
+    "Sublease Term",
+    "Term of Sublease",
+    "Sublandlord"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

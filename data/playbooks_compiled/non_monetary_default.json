@@ -1,0 +1,83 @@
+{
+  "field_id": "non_monetary_default",
+  "field_name": "Non-Monetary Default",
+  "category": "Other Lease Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "OTHER_LEASE_CLAUSES.docx",
+  "overview": "Non-monetary defaults in leases are breaches of covenant other than failing to pay rent, such as violating use restrictions, failing to maintain premises, or illegal activities. They are considered \"material\" if they create safety hazards, jeopardize insurance, disturb other tenants, or violate laws, often allowing landlords to terminate the lease after notice and cure periods.",
+  "preliminary": [
+    "OTHER LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "(Allowance | Alteration | Assignment and Subletting| Casualty| Condemnation | Hazardous Materials | Holdover | Landlord Restriction | Monetary Default | Non \u2013 Monetary Default | Parking | Repair and Maintenance | Reporting of Financial Information | Reporting of Gross Sales | Sublease Provision | Subordination)",
+    "General Applicability: All leases (Office, Retail and Industrial) except for,",
+    "Reporting of Gross Sales \u2013 Applicable only in Retail leases",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Definition Based",
+      "question_text": "Does the lease contain any clause that refers to None \u2013 Monetary Dafult keywords?",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Default",
+    "Event of Default",
+    "Default by Tenant",
+    "Remedies and Damages",
+    "Defaults by Tenant",
+    "Fees and Expenses",
+    "Default and Remedy",
+    "Delinquency Charge",
+    "Events of Default",
+    "Default Charge",
+    "Default, Re-Entry and Damages",
+    "Re-Entry and Damages",
+    "Landlord's Right to Cure Defaults",
+    "Right to Cure Defaults",
+    "Tenant's Right to Cure Defaults",
+    "Subtenant Defaults",
+    "Breach, Insolvency, Re-entry",
+    "Rental, Personal Property  and Other Taxes",
+    "Tenant's failure to pay",
+    "Defaults and Remedies",
+    "Default by Landlord and Remedies of Tenant",
+    "Event of Bankruptcy",
+    "Unperformed Covenants",
+    "Defaults",
+    "Remedie",
+    "Failure to pay"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

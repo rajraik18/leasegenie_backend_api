@@ -1,0 +1,128 @@
+{
+  "field_id": "annual_base_rent",
+  "field_name": "Annual Base Rent",
+  "category": "Financial Clauses",
+  "output_type": "Number",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "FINANCIAL_TERMS.docx",
+  "overview": "Summary Section Keywords The output for this will be a single $ amount, however there can be instances if the rent steps are provided in the form of a table, the output may be in the form of a table. Care should be taken to read if the rent is a per month or a per annum rent. Annual Rent keywords",
+  "preliminary": [
+    "FINANCIAL TERMS \u2013 MASTER ABSTRACTION GUIDE",
+    "(Lease Commencement Date | Lease Expiration Date | Term Commencement Date| Rent Commencement Date| Lease Term| Square Footage| Annual Rent| Future Rent Steps | Percentage Rent and Breakpoint| Most Recent Lease Start Date| Security Deposit)",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Fixed Rent",
+      "question_text": "Does the lease have a Summary page or a equivalent page with the below keywords?",
+      "extraction_hint": "Extract Amount",
+      "output_type": "Currency",
+      "search_scope": "summary",
+      "keywords": [],
+      "yes_branch": {
+        "type": "goto",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": false
+      },
+      "no_branch": null,
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Monthly Stated",
+      "question_text": "Does the Summary provide reference to any of the below terms",
+      "extraction_hint": "Extract Amount",
+      "output_type": "Currency",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q3",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q3",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": "Please note, the summary section typically provides details of rent based on lease commencement date. The details of rent steps will still be required to be sourced from the body of the lease.Also note, in a few leases the summary section may also include details of all the rent steps. In that event ensure the entire paragraph is read and translated to the report.Please note, the summary section typically provides details of rent based on lease commencement date. The details of rent steps will still be required to be sourced from the body of the lease.Also note, in a few leases the summary section may also include details of all the rent steps. In that event ensure the entire paragraph is read and translated to the report."
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "Rent Table in Summary or Main Lease",
+      "question_text": "Does the lease document contain clauses relating to the below key words relating to Base Rent?",
+      "extraction_hint": "Extract rent as of abstraction date",
+      "output_type": "Currency",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "flag",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Annual Base Rent",
+    "Monthly Rental Installment",
+    "Payment of Base Rent and Additional Rent",
+    "Annual Rent per Square Feet",
+    "Monthly Installment of Base Rent",
+    "Basic Monthly Rent",
+    "Fixed Rent",
+    "Premises Rent Schedule",
+    "Premises Fixed Rent",
+    "Base Rent",
+    "Minimum Annual Rent",
+    "Monthly Basic Rent",
+    "Expansion Premises Minimum Base Rent",
+    "Adjustments to Minimum Annual Base Rent; Payment of Additional Costs",
+    "Minimum Guaranteed Rental",
+    "Monthly Base Rent",
+    "Annual Sales Base and Monthly Sales Base",
+    "Monthly Rent",
+    "Minimum Annual Base Rent",
+    "Total Base Rent",
+    "For the Period",
+    "Rental",
+    "License Fee",
+    "Rent",
+    "Rent Schedule",
+    "Fixed Rental Adjustments",
+    "Basic Rent",
+    "Base Rental",
+    "Gross Rent",
+    "Annual Basic Rent"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

@@ -1,0 +1,81 @@
+{
+  "field_id": "brokers",
+  "field_name": "Brokers",
+  "category": "Other Lease Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "OTHER_LEASE_CLAUSES.docx",
+  "overview": "A brokers clause identifies the real-estate brokers involved in the lease transaction and allocates responsibility for broker commissions. It typically: (a) names the brokers representing each party (if any), (b) identifies who is responsible for paying each commission (usually Landlord), and (c) contains mutual indemnities for undisclosed broker claims. Some leases include a commission schedule by reference to a separate listing agreement.",
+  "preliminary": [
+    "OTHER LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "General Applicability: All leases (Office, Retail and Industrial).",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Definition Based",
+      "question_text": "Does the lease identify any brokers involved in the transaction?",
+      "extraction_hint": "Extract: (a) named brokers (Landlord's broker, Tenant's broker, or dual agent), (b) which party pays each commission, (c) any indemnities.",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [
+        "brokers",
+        "broker",
+        "commission"
+      ],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "literal",
+        "goto": null,
+        "literal": "No broker involved in this transaction",
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": "Common locations: Section 28.12 (HMBP-BCP), Paragraph 36 (ProLogis). Also check Face Page for broker name."
+    }
+  ],
+  "keywords": [
+    "Brokers",
+    "Broker",
+    "brokerage commission",
+    "commission to the broker",
+    "commission to Broker",
+    "no broker",
+    "no brokers",
+    "indemnify and hold the other party harmless.+broker",
+    "listing agent",
+    "representing Tenant",
+    "representing Landlord",
+    "dual agency",
+    "separate agreement between Landlord and"
+  ],
+  "summary_keywords": [
+    "Brokers",
+    "Broker",
+    "brokerage commission",
+    "commission to the broker",
+    "commission to Broker",
+    "no broker",
+    "no brokers",
+    "indemnify and hold the other party harmless.+broker"
+  ],
+  "amendment_controls": true,
+  "depends_on": []
+}

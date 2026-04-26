@@ -1,0 +1,201 @@
+{
+  "field_id": "future_rent_steps",
+  "field_name": "Future Rent Steps",
+  "category": "Financial Clauses",
+  "output_type": "Number",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "FINANCIAL_TERMS.docx",
+  "overview": "The rent steps are the increases to the rent the tenant is required to pay the Landlord. The rent step can be a Fixed percentage Fixed increase based on a specific predefined date i.e. a table detailing the rent to be paid and the date the rent will increase. Increases based on calendar year Increases based on fiscal year. Summary Section Keywords Future Rent Steps Keywords Extract the details and go to QUESTION 3. Subject to increases based on terms of lease Subject to increases at Future Rent Steps Keywords Key words for search Lease Year Calendar Year Each Lease Year following Rent commencement date",
+  "preliminary": [
+    "FINANCIAL TERMS \u2013 MASTER ABSTRACTION GUIDE",
+    "(Lease Commencement Date | Lease Expiration Date | Term Commencement Date| Rent Commencement Date| Lease Term| Square Footage| Annual Rent| Future Rent Steps | Percentage Rent and Breakpoint| Most Recent Lease Start Date| Security Deposit)",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Fixed Rent",
+      "question_text": "Does the lease have a Summary page or a equivalent page with the below keywords?",
+      "extraction_hint": "Extract Amount",
+      "output_type": "Currency",
+      "search_scope": "summary",
+      "keywords": [],
+      "yes_branch": {
+        "type": "goto",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": false
+      },
+      "no_branch": null,
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Monthly Stated",
+      "question_text": "Does the Summary provide reference to any of the below terms",
+      "extraction_hint": "Extract Amount",
+      "output_type": "Currency",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": null,
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q6",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "Rent Table in Summary or Main Lease",
+      "question_text": "Is the amount a firm amount that is a dollar amount defined with no suffix or prefixes or any text before or after the amount?",
+      "extraction_hint": "Extract dates and Amounts",
+      "output_type": "Date/Currency",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q4",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q4",
+      "priority": 4,
+      "condition_type": "Escalation Fixed in Summary Lease or Main lease",
+      "question_text": "Is there a table describing the complete details of the rent steps.",
+      "extraction_hint": "Extract Percentage",
+      "output_type": "Numeric",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q5",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q5",
+      "priority": 5,
+      "condition_type": "CPI Based",
+      "question_text": "Does the term contain any language after the amount?",
+      "extraction_hint": "Extract language",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q6",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q6",
+      "priority": 6,
+      "condition_type": "Silent",
+      "question_text": "Does the lease document contain clauses relating to the below key words relating to Base Rent?",
+      "extraction_hint": "Record None",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "goto",
+        "goto": "Q7",
+        "literal": null,
+        "also_extract": false
+      },
+      "no_branch": null,
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q7",
+      "priority": 7,
+      "condition_type": "Initial Amount in Summary and Adjustments in Main Lease",
+      "question_text": "Does the Base Rent clause identified above contain, language tied to rent steps based on lease year or calendar year?",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Currency and Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "flag",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Payment of Base Rent and Additional Rent",
+    "Annual Rent per Square Feet",
+    "Installment of Base Rent",
+    "Expansion Premises Minimum Base Rent",
+    "Adjustments to Minimum Annual Base Rent; Payment of Additional Costs",
+    "Minimum Annual Base Rent",
+    "Fixed Rent",
+    "Premises Rent Schedule",
+    "Premises Fixed Rent",
+    "Minimum Annual Rent",
+    "Annual Base Rent",
+    "Annual Basic Rent",
+    "Monthly Rent",
+    "Rent Schedule",
+    "Total Base Rent",
+    "Rent Adjustments",
+    "Base Rent"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

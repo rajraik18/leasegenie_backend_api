@@ -1,0 +1,69 @@
+flowchart TD
+    Entry([Coordinator.run<br/>abstract_type, property_type,<br/>documents]) --> BuildCtx[Build DocumentContext]
+
+    BuildCtx --> OCR[For each document:<br/>pdfplumber text extraction<br/>+ Tesseract fallback on scanned pages]
+    OCR --> Segment[Segment clauses via regex<br/>numbered / Section / ALL-CAPS]
+    Segment --> BM25[Build BM25 index<br/>across base_lease +<br/>all amendment_N clauses]
+
+    BM25 --> SharedFacts[Initialize shared_facts dict<br/>accumulator for cross-<br/>field dependencies]
+
+    SharedFacts --> SpecLoop{For each category in<br/>SPECIALIST_ORDER}
+    SpecLoop --> Basic[1 - BasicInfoAgent<br/>17 fields]
+    Basic --> Financial[2 - FinancialAgent<br/>5 fields]
+    Financial --> Reimb[3 - ReimbursementAgent<br/>17 fields]
+    Reimb --> Critical[4 - CriticalAgent<br/>16 fields]
+    Critical --> Other[5 - OtherClausesAgent<br/>16 fields]
+
+    Basic -.->|publishes LCD, LED,<br/>RSF, Tenant Name| SharedFacts
+    Financial -.->|publishes rent| SharedFacts
+    Reimb -.->|CAM structure<br/>propagates to<br/>CAM Inclusion etc| SharedFacts
+    Other -.->|reads LCD for<br/>Allowance age rule| SharedFacts
+
+    Other --> FieldLoop{For each applicable<br/>playbook × each<br/>document label}
+
+    FieldLoop --> CheckApplicable[Filter playbooks by<br/>property_type gate<br/>retail-only / office-only]
+
+    CheckApplicable --> ExecPlaybook[PlaybookExecutor.run<br/>see Flow 6 for detail]
+
+    ExecPlaybook --> PostProcess[Specialist.post_process<br/>category-specific rules]
+
+    PostProcess --> BasicRules{category =<br/>Basic Info?}
+    BasicRules -->|yes| LeaseTerm[Derive Lease Term<br/>from LCD + LED<br/>if playbook returned None]
+    BasicRules -->|yes| UndatedLit[Lease Date None<br/>→ 'undated' literal]
+    BasicRules -->|yes| FlagMustHave[Tenant/Landlord blank<br/>→ needs_review = true]
+
+    PostProcess --> ReimbRules{category =<br/>Reimbursements?}
+    ReimbRules -->|yes| PropagateCAM[CAM = 'No Recovery'<br/>→ inherit to CAM Inclusion,<br/>Caps on CAM, Base Year]
+
+    PostProcess --> OtherRules{category =<br/>Other Clauses?}
+    OtherRules -->|yes| AllowanceDep[Allowance checks LCD age<br/><1yr → full disbursement terms<br/>>1yr → amount only]
+
+    LeaseTerm --> Persist[Convert to<br/>AgentFieldResult]
+    UndatedLit --> Persist
+    FlagMustHave --> Persist
+    PropagateCAM --> Persist
+    AllowanceDep --> Persist
+    PostProcess --> Persist
+
+    Persist --> Callback[on_result callback<br/>→ pipeline persists to<br/>FieldValue + AuditLog]
+    Callback --> Progress[on_progress callback<br/>→ update ExtractionJob]
+    Progress --> FieldLoop
+
+    FieldLoop -->|done| Recon[ReconciliationAgent.run]
+
+    Recon --> CrossDoc[Cross-document checks<br/>RSF mismatch,<br/>Suite conflict,<br/>Tenant name variation,<br/>Rent change across amendments]
+
+    CrossDoc --> CrossField[Cross-field checks<br/>LED < LCD,<br/>Lease Term vs LED-LCD math,<br/>Low confidence count,<br/>Needs review rollup]
+
+    CrossField --> CollectFlags[Collect playbook-declared<br/>red flags from each<br/>outcome.red_flags]
+
+    CollectFlags --> Report[Return<br/>ReconciliationReport]
+
+    Report --> Done([Coordinator returns<br/>final_results +<br/>reconciliation report])
+
+    style Entry fill:#2d6cdf,color:#fff
+    style Done fill:#2ea043,color:#fff
+    style ExecPlaybook fill:#a855f7,color:#fff
+    style Recon fill:#f97316,color:#fff
+    style BM25 fill:#fbbf24,color:#000
+    style SharedFacts fill:#8b5cf6,color:#fff

@@ -1,0 +1,94 @@
+{
+  "field_id": "other_income_exterior_signage_storage",
+  "field_name": "Other Income (Exterior Signage/ Storage)",
+  "category": "Reimbursements",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "REIMBURSEMENTS.docx",
+  "overview": "Extract the amount against the keyword provided above. If only the amount is provided, it is safe to assume the amount is a fixed amount for possibly the initial period or the term based on language to be read in the body of the lease. If a text is provided against the Keyword, abstract the text as it is and provide the same. Capture all the details from the sections against the Other Income keywords, Marketing Keywords and Advertising Keywords.",
+  "preliminary": [
+    "REIMBURSEMENTS \u2013 MASTER ABSTRACTION GUIDE",
+    "(CAM | RE Taxes | Landlord Insurance| Other Income, Advertising and Marketing| Tenant Insurance Requirements)",
+    "General Applicability: All leases (Office, Retail and Industrial)",
+    "Summary",
+    "Definitions",
+    "Utilities section",
+    "CAM section",
+    "Taxes section",
+    "Insurance section",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Dollar Amount",
+      "question_text": "Does the lease contain a summary page?",
+      "extraction_hint": "Extract Amount",
+      "output_type": "Currency",
+      "search_scope": "summary",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Conditional language",
+      "question_text": "Does the lease contain any clause that refers to Other Income keywords, Marketing Keywords and Advertising Keywords?",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Signage Fee",
+    "Signage Rent",
+    "Pylon signage",
+    "Storage Rent",
+    "Storage Fee",
+    "Merchants Association",
+    "Commission",
+    "Leasing Cost",
+    "Leasing Commission",
+    "Brokerage Commission",
+    "Outdoor Patio Area"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

@@ -1,0 +1,152 @@
+{
+  "field_id": "term_commencement_date",
+  "field_name": "Term Commencement date",
+  "category": "Basic Information",
+  "output_type": "Number",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "BASIC_INFORMATION.docx",
+  "overview": "General info \u2013 Applicable to all types of leases (office, retail and or industrial). The term commencement date will be the date when lease term started to calculate.  It can be from LCD or RCD. Summary Section Keywords",
+  "preliminary": [
+    "BASIC INFORMATION \u2013 MASTER ABSTRACTION GUIDE",
+    "(Building | Landlord Name| Tenant Name| Lease Guarantor| Suite| Lease Date | Property Name| Street Address| City| State)",
+    "General Applicability: All leases (Office, Retail and Industrial)",
+    "Summary",
+    "Definitions",
+    "Building section",
+    "Landlord Name section",
+    "Tenant Name section",
+    "Guarantor section",
+    "Suite Identification section",
+    "Guarantor section",
+    "Leased Premises section",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Explicit Date Mentioned",
+      "question_text": "Does the lease have a Summary page or a equivalent page with the below keywords?",
+      "extraction_hint": "Extract Date",
+      "output_type": "Date",
+      "search_scope": "summary",
+      "keywords": [],
+      "yes_branch": {
+        "type": "goto",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": false
+      },
+      "no_branch": null,
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Defined Term Reference",
+      "question_text": "Is the term commencement date defined in years (in summary or in Main Lease) by using Term commencement date Keywords.",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "body",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q3",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "Conditional Event Based",
+      "question_text": "If term start defined as x years from commencement date,",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q4",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q4",
+      "priority": 4,
+      "condition_type": "Silent",
+      "question_text": "If term start date tied to substantial completion or possession,",
+      "extraction_hint": "Record \"Date\"",
+      "output_type": "Date",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q5",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q5",
+      "priority": 5,
+      "condition_type": "",
+      "question_text": "If no term start date mentioned, record \"LCD\"",
+      "extraction_hint": null,
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": null,
+      "no_branch": null,
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Term",
+    "Term commences on",
+    "Original Term",
+    "Commencement Date of Term",
+    "Commencing",
+    "Commencing on",
+    "Duration and Commencement",
+    "Term Start Date",
+    "Term Commencement"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

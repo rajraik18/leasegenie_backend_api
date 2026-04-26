@@ -1,0 +1,71 @@
+flowchart TD
+    Start([PlaybookExecutor.run<br/>playbook, ctx, doc_label]) --> LoadFirst[current_qid =<br/>playbook.first_question.id]
+
+    LoadFirst --> StepCheck{steps < MAX_STEPS<br/>AND current_qid set?}
+    StepCheck -->|no| Finalize[Build PlaybookResult]
+
+    StepCheck -->|yes| LoadQ[q = playbook.question current_qid]
+    LoadQ --> QuestionExists{Question found<br/>in playbook?}
+    QuestionExists -->|no| Finalize
+    QuestionExists -->|yes| Gather[_gather_clauses<br/>BM25 search with<br/>scope-aware query:<br/>summary / definitions / body / all]
+
+    Gather --> FormatBlock[Format top 5 hits:<br/>'#1 doc=base_lease page=3<br/>clause=3.1 snippet: ...']
+
+    FormatBlock --> AskLLM[Ollama JSON-mode call:<br/>system: 'answer ONE yes/no<br/>+ extract value'<br/>user: field + question +<br/>clauses + prior_extracts]
+
+    AskLLM --> ParseJSON[Parse response<br/>answer: YES/NO/UNKNOWN<br/>value, raw_snippet,<br/>is_monthly, page_number,<br/>clause_number, reasoning]
+
+    ParseJSON --> FillCitation[Fill missing page/clause<br/>from top retrieved hit<br/>if LLM left them null]
+
+    FillCitation --> RedFlagCheck{q.red_flag defined<br/>AND answer = YES?}
+    RedFlagCheck -->|yes| AppendFlag[Append to red_flags]
+    RedFlagCheck -->|no| CaptureValue
+    AppendFlag --> CaptureValue
+
+    CaptureValue{LLM returned<br/>a value?} -->|yes| Stash[Append to<br/>aggregated_extracts]
+    Stash --> CheckBest{answer = YES AND<br/>best_value is None?}
+    CheckBest -->|yes| SetBest[best_value = llm.value<br/>best_page = llm.page<br/>best_clause = llm.clause<br/>best_clause_text = raw_snippet<br/>or retrieved top snippet<br/>condition_type_taken = q.condition_type<br/>is_monthly = llm.is_monthly]
+    CheckBest -->|no| Branch
+    SetBest --> Branch
+    CaptureValue -->|no| Branch
+
+    Branch{answer?} -->|YES| YesBranch[action = q.yes_branch]
+    Branch -->|NO| NoBranch[action = q.no_branch]
+    Branch -->|UNKNOWN| FallbackBranch[action = yes_branch or no_branch]
+
+    YesBranch --> ActionSwitch{action.type?}
+    NoBranch --> ActionSwitch
+    FallbackBranch --> ActionSwitch
+
+    ActionSwitch -->|null| Finalize
+    ActionSwitch -->|GOTO| Goto[current_qid = action.goto]
+    ActionSwitch -->|EXTRACT| ExtractAction[current_qid = action.goto<br/>may be null = terminate]
+    ActionSwitch -->|FINALIZE| Finalize
+    ActionSwitch -->|FLAG_REVIEW| FlagReview[needs_review = true]
+    ActionSwitch -->|RECORD_NONE| RecordNone[best_value = 'None'<br/>if still None]
+    ActionSwitch -->|RECORD_LITERAL| RecordLit[best_value = action.literal<br/>e.g. 'No Recovery' / 'undated']
+
+    FlagReview --> Finalize
+    RecordNone --> Finalize
+    RecordLit --> Finalize
+    Goto --> StepCheck
+    ExtractAction --> StepCheck
+
+    Finalize --> Normalize[Normalize by output_type:<br/>Currency → strip $ and ,<br/>if is_monthly → × 12]
+
+    Normalize --> Confidence[Compute confidence:<br/>needs_review → 0.4<br/>has raw_snippet → 0.9<br/>has clause_text → 0.7<br/>value only → 0.5]
+
+    Confidence --> FallbackClause{value = None AND<br/>no clause_text?}
+    FallbackClause -->|yes| FetchFallback[ctx.search<br/>field_name top_k=1<br/>→ fill best_clause_text,<br/>best_page, best_clause]
+    FallbackClause -->|no| BuildResult
+    FetchFallback --> BuildResult
+
+    BuildResult[Return PlaybookResult:<br/>value, confidence,<br/>page_number, clause_number,<br/>clause_text, output_type,<br/>condition_type_taken,<br/>red_flags, needs_review,<br/>trace = list of StepTrace]
+
+    BuildResult --> Done([Return to Specialist])
+
+    style Start fill:#2d6cdf,color:#fff
+    style Done fill:#2ea043,color:#fff
+    style AskLLM fill:#a855f7,color:#fff
+    style ActionSwitch fill:#f97316,color:#fff
+    style Normalize fill:#fbbf24,color:#000

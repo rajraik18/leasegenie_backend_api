@@ -1,0 +1,38 @@
+flowchart TD
+    User([Client / UI]) -->|POST multipart<br/>/tenants/TENANT_ID/documents<br/>file + document_type + effective_date| API[documents.upload_document]
+
+    API --> FetchTenant[db.get Tenant<br/>by tenant_id]
+    FetchTenant -->|not found| Err404[404 tenant not found]
+    FetchTenant -->|found| CheckType{document_type<br/>== base_lease<br/>or amendment?}
+
+    CheckType -->|other| Err400[400 invalid<br/>document_type]
+    CheckType -->|base_lease| BaseFlow{Base lease<br/>already uploaded?}
+    CheckType -->|amendment| AmendFlow{Count of<br/>amendments >= 7?}
+
+    BaseFlow -->|yes| Err409Base[409 base lease<br/>already uploaded -<br/>delete first]
+    BaseFlow -->|no| SetOrderBase[document_order = 0]
+
+    AmendFlow -->|yes| Err409Max[409 max 7<br/>amendments reached]
+    AmendFlow -->|no| SetOrderAmend[document_order =<br/>amendment_count + 1]
+
+    SetOrderBase --> ParseDate[Parse effective_date<br/>ISO YYYY-MM-DD]
+    SetOrderAmend --> ParseDate
+    ParseDate -->|bad format| Err400Date[400 bad date format]
+    ParseDate -->|ok or null| WriteDisk[Write file to<br/>uploads/TENANT_ID/<br/>ORDER_filename.pdf]
+
+    WriteDisk --> InsertDoc[Insert Document row<br/>tenant_id, filename,<br/>storage_path, type,<br/>order, effective_date,<br/>ocr_status=pending]
+
+    InsertDoc --> Commit[db.commit]
+    Commit --> Serialize[DocumentOut.model_validate]
+
+    Serialize -->|201 Created| Response([{<br/>  id: doc-uuid,<br/>  filename, document_type,<br/>  document_order,<br/>  ocr_status: pending,<br/>  uploaded_at<br/>}])
+
+    style User fill:#2d6cdf,color:#fff
+    style Response fill:#2ea043,color:#fff
+    style Err404 fill:#dc2626,color:#fff
+    style Err400 fill:#dc2626,color:#fff
+    style Err400Date fill:#dc2626,color:#fff
+    style Err409Base fill:#dc2626,color:#fff
+    style Err409Max fill:#dc2626,color:#fff
+    style WriteDisk fill:#fbbf24,color:#000
+    style Commit fill:#a855f7,color:#fff

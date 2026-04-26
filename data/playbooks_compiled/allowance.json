@@ -1,0 +1,117 @@
+{
+  "field_id": "allowance",
+  "field_name": "Allowance",
+  "category": "Other Lease Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "OTHER_LEASE_CLAUSES.docx",
+  "overview": "An Allowance is generally defined as money paid by a landlord/lessor to the tenant/lessee as reimbursement for the construction of leasehold improvements, such as modifications to commercial real estate. Extract the language against the keyword provided above. Capture all the details from the sections against the Allowance keywords (If the Lease Commencement Date is approx. one year from current date). Capture only the amounts from the sections against the Allowance keywords (If the Lease Commencement Date has occurred for more than one year from current date).",
+  "preliminary": [
+    "OTHER LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "(Allowance | Alteration | Assignment and Subletting| Casualty| Condemnation | Hazardous Materials | Holdover | Landlord Restriction | Monetary Default | Non \u2013 Monetary Default | Parking | Repair and Maintenance | Reporting of Financial Information | Reporting of Gross Sales | Sublease Provision | Subordination)",
+    "General Applicability: All leases (Office, Retail and Industrial) except for,",
+    "Reporting of Gross Sales \u2013 Applicable only in Retail leases",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Dollar Amount",
+      "question_text": "Does the lease contain a summary page?",
+      "extraction_hint": "Extract Amount",
+      "output_type": "Currency",
+      "search_scope": "summary",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Per SF basis",
+      "question_text": "Does the lease contain any clause that refers to Allowance?",
+      "extraction_hint": "Extract Rate",
+      "output_type": "Currency",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "TI Allowance",
+    "Expansion Test-Fit Allowance",
+    "Floor Tenant Allowance",
+    "Existing Premises Allowance",
+    "Expansion Premises Allowance",
+    "Tenant Allowance",
+    "Tenant Improvement Allowance",
+    "Improvements/Upgrades",
+    "Tenant's Work",
+    "Mezzanine Tenant Improvement Allowance",
+    "Excess Costs",
+    "Future Expansion Tenant Improvement Work",
+    "Expansion TI Allowance",
+    "Construction Allowance",
+    "T's Improvement Allowances",
+    "Landlord's Contribution",
+    "Test Fit Allowance",
+    "Space Planning Allowance",
+    "Improvements Allowance",
+    "Move in Allowance",
+    "Landlord's Reimbursement",
+    "Sidewalk and Landscaping Allowance",
+    "Cost of Work",
+    "Landlord Funding Commitment",
+    "Relocation Payment",
+    "Allowance",
+    "Landlord's Construction Obligations",
+    "Tenant's Construction Obligations",
+    "Tenant Fund",
+    "Repair Allowance",
+    "Work Allowance",
+    "Tenant's Work Allowance",
+    "Landlord's Work Allowance",
+    "Contribution"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": [
+    "original_lease_commencement_date"
+  ]
+}

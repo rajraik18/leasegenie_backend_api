@@ -1,0 +1,71 @@
+{
+  "field_id": "condemnation",
+  "field_name": "Condemnation",
+  "category": "Other Lease Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "OTHER_LEASE_CLAUSES.docx",
+  "overview": "A condemnation clause in a lease defines the rights of landlords and tenants when all or part of a property is taken by government eminent domain. It typically dictates if the lease terminates, how rent is abated, and how compensation awards are divided, often allowing tenants to claim damages for fixtures, improvements, and \"bonus value\".",
+  "preliminary": [
+    "OTHER LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "(Allowance | Alteration | Assignment and Subletting| Casualty| Condemnation | Hazardous Materials | Holdover | Landlord Restriction | Monetary Default | Non \u2013 Monetary Default | Parking | Repair and Maintenance | Reporting of Financial Information | Reporting of Gross Sales | Sublease Provision | Subordination)",
+    "General Applicability: All leases (Office, Retail and Industrial) except for,",
+    "Reporting of Gross Sales \u2013 Applicable only in Retail leases",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Definition Based",
+      "question_text": "Does the lease contain any clause that refers to Condemnation keywords?",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Eminent Domain",
+    "Landlord\u2019s Condemnation Restoration",
+    "Condemnation",
+    "Complete Taking",
+    "Partial Taking",
+    "Proceeds",
+    "Total Condemnation",
+    "Partial Condemnation",
+    "Landlord's and Tenant's Damages",
+    "Public or quasi-public",
+    "Restoration",
+    "Appropriation Clause",
+    "Expropriation",
+    "Land Acquisition"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

@@ -1,0 +1,84 @@
+{
+  "field_id": "most_recent_lease_start",
+  "field_name": "Most Recent Lease Start",
+  "category": "Basic Information",
+  "output_type": "Number",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "BASIC_INFORMATION.docx",
+  "overview": "General info \u2013 Applicable to all types of leases (office, retail and or industrial). The most recent commencement date means the date when the lease was most recently renewed/extended. For example, lease commenced on 01/01/2020 to 12/31/2024 and it was renewed on 01/01/2025. So, the most recent lease start date will be 01/01/2025. Most Recent Lease Start Date Can be fetched from latest amendment relating to renewal or extension of the lease If lease is not renewed/extended/expanded, check for Lease Commencement Date (LCD)",
+  "preliminary": [
+    "BASIC INFORMATION \u2013 MASTER ABSTRACTION GUIDE",
+    "(Building | Landlord Name| Tenant Name| Lease Guarantor| Suite| Lease Date | Property Name| Street Address| City| State)",
+    "General Applicability: All leases (Office, Retail and Industrial)",
+    "Summary",
+    "Definitions",
+    "Building section",
+    "Landlord Name section",
+    "Tenant Name section",
+    "Guarantor section",
+    "Suite Identification section",
+    "Guarantor section",
+    "Leased Premises section",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Explicit Date Mentioned",
+      "question_text": "Does we have latest amendment regarding renewal/extension Letter?",
+      "extraction_hint": "Extract Date",
+      "output_type": "Date",
+      "search_scope": "amendments",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Extension Commencement Date",
+      "question_text": "If we don\u2019t have latest amendment, then update LCD",
+      "extraction_hint": "Extract Date",
+      "output_type": "Date",
+      "search_scope": "amendments",
+      "keywords": [],
+      "yes_branch": null,
+      "no_branch": null,
+      "red_flag": null,
+      "notes": "Please note, all the QUESTIONs for LCD will be applicable here, if we are capturing most recent lease start date from lease, in absence of amendments.Please note, all the QUESTIONs for LCD will be applicable here, if we are capturing most recent lease start date from lease, in absence of amendments."
+    }
+  ],
+  "keywords": [
+    "Lease Term",
+    "Commencing on",
+    "Expansion Premises Completion Date",
+    "Extension Period",
+    "Expansion Premises Commencement Date",
+    "Extended Term",
+    "Extension Term commencement",
+    "Term extended"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

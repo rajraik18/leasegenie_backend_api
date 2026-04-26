@@ -1,0 +1,148 @@
+{
+  "field_id": "notices",
+  "field_name": "Notices",
+  "category": "Other Lease Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "OTHER_LEASE_CLAUSES.docx",
+  "overview": "A notices clause specifies how formal written communications between Landlord and Tenant must be sent to be legally effective. It typically defines: (a) the notice addresses for each party (and any required 'with a copy to' addresses for legal counsel), (b) permitted delivery methods (certified mail, overnight courier, hand delivery), and (c) when notice is deemed given (upon receipt, upon delivery, after a fixed period). Failed or defective notice can invalidate default declarations and cure periods, so this is a high-impact operational clause.",
+  "preliminary": [
+    "OTHER LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "General Applicability: All leases (Office, Retail and Industrial).",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Definition Based",
+      "question_text": "Does the lease contain a notices clause specifying how formal communications must be delivered?",
+      "extraction_hint": "Extract full notices clause including: (a) Landlord notice address, (b) Tenant notice address, (c) any 'with a copy to' addresses, (d) permitted delivery methods, (e) when notice is deemed effective.",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [
+        "notices",
+        "notice address",
+        "certified mail",
+        "overnight courier",
+        "deemed given"
+      ],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "literal",
+        "goto": null,
+        "literal": "None",
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": "Common locations: Section 28.1 (HMBP-BCP leases), Paragraph 37(c) (ProLogis leases)."
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Location Based",
+      "question_text": "What is the Landlord's notice address (including attention line)?",
+      "extraction_hint": "Extract the full Landlord notice address block.",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [
+        "To Landlord at",
+        "Landlord's Notice Address",
+        "LANDLORD'S NOTICE"
+      ],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q3",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": "Q3",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "Location Based",
+      "question_text": "What is the Tenant's notice address (including attention line)?",
+      "extraction_hint": "Extract the full Tenant notice address block.",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [
+        "To Tenant at",
+        "Tenant's Notice Address",
+        "TENANT'S NOTICE"
+      ],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Notices",
+    "notice address",
+    "written notice",
+    "certified mail",
+    "return receipt requested",
+    "registered mail",
+    "overnight courier",
+    "Federal Express",
+    "FedEx",
+    "UPS",
+    "hand delivery",
+    "hand-delivered",
+    "postage prepaid",
+    "postage pre-paid",
+    "deemed given",
+    "deemed delivered",
+    "deemed received",
+    "Attn:",
+    "Attention:",
+    "with a copy to",
+    "Landlord's Notice Address",
+    "Tenant's Notice Address"
+  ],
+  "summary_keywords": [
+    "Notices",
+    "notice address",
+    "written notice",
+    "certified mail",
+    "return receipt requested",
+    "registered mail",
+    "overnight courier",
+    "Federal Express"
+  ],
+  "amendment_controls": true,
+  "depends_on": []
+}

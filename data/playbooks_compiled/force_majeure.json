@@ -1,0 +1,117 @@
+{
+  "field_id": "force_majeure",
+  "field_name": "Force Majeure",
+  "category": "Other Lease Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "OTHER_LEASE_CLAUSES.docx",
+  "overview": "A force majeure clause excuses or delays a party's performance when performance is prevented by causes beyond that party's reasonable control (e.g., acts of God, war, terrorism, strikes, government regulations, pandemics, natural disasters). Key distinctions: (a) which events qualify, (b) which party may invoke the clause (often Landlord-only, sometimes mutual), (c) whether rent obligations are excused (rarely \u2014 most leases specify that monetary obligations are NOT excused by force majeure even when other obligations are), and (d) required notice and mitigation obligations.",
+  "preliminary": [
+    "OTHER LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "General Applicability: All leases (Office, Retail and Industrial).",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Definition Based",
+      "question_text": "Does the lease contain a force majeure clause?",
+      "extraction_hint": "Extract the full force majeure clause. Note: (a) qualifying events, (b) which party(ies) may invoke it, (c) whether payment obligations are excused or remain absolute.",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [
+        "force majeure",
+        "acts of God",
+        "beyond the reasonable control"
+      ],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "literal",
+        "goto": null,
+        "literal": "None",
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": "Common locations: Section 28.15 (HMBP-BCP), Paragraph 33 (ProLogis)."
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Yes/No",
+      "question_text": "Are rent/monetary obligations excused by force majeure?",
+      "extraction_hint": "Most leases explicitly state that monetary obligations are NOT excused. Confirm.",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [
+        "obligation to pay",
+        "absolute and unconditional",
+        "shall remain",
+        "not be delayed or excused"
+      ],
+      "yes_branch": {
+        "type": "literal",
+        "goto": null,
+        "literal": "Yes \u2014 rent obligations excused (unusual/tenant-favorable)",
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "literal",
+        "goto": null,
+        "literal": "No \u2014 rent obligations remain absolute",
+        "also_extract": true
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Force Majeure",
+    "force majeure",
+    "acts of God",
+    "acts of god",
+    "strikes",
+    "lockouts",
+    "labor disputes",
+    "war",
+    "terrorism",
+    "terrorist acts",
+    "riots",
+    "civil commotion",
+    "civil disturbance",
+    "government regulations",
+    "government restrictions",
+    "inability to obtain labor or materials",
+    "beyond the reasonable control",
+    "beyond such party's control",
+    "pandemic",
+    "epidemic"
+  ],
+  "summary_keywords": [
+    "Force Majeure",
+    "force majeure",
+    "acts of God",
+    "acts of god",
+    "strikes",
+    "lockouts",
+    "labor disputes",
+    "war"
+  ],
+  "amendment_controls": true,
+  "depends_on": []
+}

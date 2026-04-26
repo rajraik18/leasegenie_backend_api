@@ -1,0 +1,80 @@
+{
+  "field_id": "leased_rsf",
+  "field_name": "Leased RSF",
+  "category": "Basic Information",
+  "output_type": "Number",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "BASIC_INFORMATION.docx",
+  "overview": "General info \u2013 Applicable to all types of leases (office, retail and or industrial). SF means area leased by Tenant in the premises / leased premises. Summary Section Keywords QUESTION 2 \u2013 Update the area (in SF) for the premises leased from Summary Section of the page using the Square Footage Keywords: Caution: SF to be updated from the latest amendment. If the premises has been expanded or reduced in the latest amendment, capture SF given in latest amendment.Caution: SF to be updated from the latest amendment. If the premises has been expanded or reduced in the latest amendment, capture SF given in latest amendment.QUESTION 3: If leases/amendment is silent to SF, then please update \u201cNone\u201d",
+  "preliminary": [
+    "BASIC INFORMATION \u2013 MASTER ABSTRACTION GUIDE",
+    "(Building | Landlord Name| Tenant Name| Lease Guarantor| Suite| Lease Date | Property Name| Street Address| City| State)",
+    "General Applicability: All leases (Office, Retail and Industrial)",
+    "Summary",
+    "Definitions",
+    "Building section",
+    "Landlord Name section",
+    "Tenant Name section",
+    "Guarantor section",
+    "Suite Identification section",
+    "Guarantor section",
+    "Leased Premises section",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Measurement",
+      "question_text": "Does the lease have a Summary page or a equivalent page with the below keywords?",
+      "extraction_hint": "RSF value",
+      "output_type": "Number",
+      "search_scope": "summary",
+      "keywords": [],
+      "yes_branch": {
+        "type": "finalize",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q3",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Expansion of Existing Premises",
+    "Leased Premises",
+    "Description of the Premises",
+    "RSF of the Premises",
+    "Demised Premises",
+    "Expansion of Premises",
+    "Subleased Premises",
+    "Description",
+    "Floor Area of Premises",
+    "Premises",
+    "Rentable Area",
+    "Net Rentable Area of Premises",
+    "Gross Leasable Area",
+    "GLA",
+    "square feet",
+    "Square Footage",
+    "Dimensions of Demised Premises",
+    "Property Leased"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

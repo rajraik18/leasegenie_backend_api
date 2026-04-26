@@ -1,0 +1,55 @@
+sequenceDiagram
+    autonumber
+    actor User as Client
+    participant API as FastAPI<br/>/tenants/{id}/fields/{field_id}
+    participant DB as SQLite
+    participant Abs as build_abstraction<br/>service
+
+    User->>+API: PATCH /tenants/TENANT_ID/fields/annual_base_rent<br/>{value: "125000",<br/>comment: "Confirmed with tenant",<br/>actor: "alice@acme.com"}
+
+    API->>+DB: db.get Tenant
+    DB-->>-API: Tenant row
+    alt Tenant not found
+        API-->>User: 404 tenant not found
+    end
+
+    API->>+DB: SELECT FieldOverride<br/>WHERE tenant_id + field_id
+    DB-->>-API: existing row OR null
+
+    Note over API: old_value = existing.value<br/>(for audit log)
+
+    alt payload.value is null (clear override)
+        API->>+DB: DELETE FieldOverride
+        DB-->>-API: ok
+        API->>+DB: INSERT AuditLog<br/>action=revert,<br/>old_value=X,<br/>new_value=null,<br/>actor=alice
+        DB-->>-API: ok
+    else payload.value provided (set/update override)
+        alt Override doesn't exist yet
+            API->>+DB: INSERT FieldOverride<br/>value, comment, updated_by
+            DB-->>-API: ok
+        else Override exists
+            API->>+DB: UPDATE FieldOverride<br/>value, comment,<br/>updated_by, updated_at
+            DB-->>-API: ok
+        end
+        API->>+DB: INSERT AuditLog<br/>action=override,<br/>old_value, new_value,<br/>actor, timestamp
+        DB-->>-API: ok
+    end
+
+    API->>+DB: commit
+    DB-->>-API: ok
+
+    Note over API,Abs: Return the FULL updated abstraction<br/>so the UI sees the recomputed<br/>concluded_value immediately
+
+    API->>+Abs: build_abstraction(tenant_id)
+    Abs->>DB: Fetch all field values, overrides, docs
+    DB-->>Abs: data
+    Abs->>Abs: For THIS field:<br/>override_present = true<br/>→ concluded_source = 'override'<br/>→ concluded_confidence = 1.0<br/>→ source_document_label = 'Override'
+    Abs-->>-API: TenantAbstractionOut
+
+    API-->>-User: 200 OK<br/>full abstraction<br/>with updated field
+
+    Note over User: Later: view audit trail
+    User->>+API: GET /tenants/TENANT_ID/audit
+    API->>+DB: SELECT * FROM audit_log<br/>WHERE tenant_id<br/>ORDER BY timestamp DESC
+    DB-->>-API: rows
+    API-->>-User: List of AuditLogOut<br/>showing extract → override<br/>chain per field

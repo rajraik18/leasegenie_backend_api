@@ -1,0 +1,101 @@
+{
+  "field_id": "utilities",
+  "field_name": "Utilities",
+  "category": "Reimbursements",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "REIMBURSEMENTS.docx",
+  "overview": "Typically for office leases, the premises utilities are also paid by the tenant. For Retail leases, most leases relate to common area maintenance. Context: Details to be abstracted from a underwriter perspective and should cover details of utilities to be charged to the tenant part of common area maintenance \u2013 including methodology, (will this be invoiced part of common area maintenance or separately charged, if separately charged method (proportionate share). Charges should also include any mark up like an admin fee to be included. For premises utilities will there be a separate meter or sub-metered, extent of responsibility with Landlord or Tenant. Rate structure \u2013 typically for HVAC and electricity usage. Utilities covers \u2013 water, sewer, electricity, trash and HVAC The clause should include all the points including who is responsible for payment, how is the payment to be calculated based on (metered or sub-metered) or does the Tenant pay directly to the utility service provider. If the utility service is not metered, then ensure the methodology we are using in this instance is provided with clarity. Is there any administrative charge or charge to be paid by the tenant over the utility payment? Are there any charges for after hours utility usage? Under certain circumstances, the lease may state contain language or state that \u201cif landlord does not provide continuous utility to the premises\u201d (that is there is an interruption), then the tenant may have right to be remedied (that is paid back or terminate if there is no quick restoration of services). What is the utility/utilities being considered (note the answer could be multiple eg: Water, Sewer, electricity, however extracting only the relevant is critical to understand the other charges by the underwriter). Who pays for utilities identified about (Landlord or Tenant) How is the tenant charged (if tenant is responsible) \uf0e0 Is if proportionate share or any other calculation How is tenant\u2019s share calculated (is it distributed among the tenants who use the specific service) or is it charged as part of Common Area maintenance. Is there a separate administrative cost What happens if there is an interruption to the service, how does this impact the payment or adjustment.",
+  "preliminary": [
+    "REIMBURSEMENTS \u2013 MASTER ABSTRACTION GUIDE",
+    "(CAM | RE Taxes | Landlord Insurance| Other Income, Advertising and Marketing| Tenant Insurance Requirements)",
+    "General Applicability: All leases (Office, Retail and Industrial)",
+    "Summary",
+    "Definitions",
+    "Utilities section",
+    "CAM section",
+    "Taxes section",
+    "Insurance section",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "No Payments",
+      "question_text": "Does the lease contain separate clause relating to Utilities listed below?",
+      "extraction_hint": "Record None",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": "Note: Note we are going to Question 2 if the answer is yes or no. If the answer is Yes, then the information is abstracted and we have to go to Question 2 if not it is directly to Question 2 \u2013 the reason is a lease can have both premises and common area utilities present in different locations.  Note: Note we are going to Question 2 if the answer is yes or no. If the answer is Yes, then the information is abstracted and we have to go to Question 2 if not it is directly to Question 2 \u2013 the reason is a lease can have both premises and common area utilities present in different locations."
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Included in CAM",
+      "question_text": "Does the lease include language relating to utilities part of Common Area section?",
+      "extraction_hint": "Extract \"Included in CAM\"",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "finalize",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Utilities and Services",
+    "Utilities",
+    "Utilities and Other Building Services",
+    "Gas",
+    "Water",
+    "Additional Services",
+    "air conditioning",
+    "electricity",
+    "Gas, Water, Heat, Electricity",
+    "HVAC",
+    "Utility Bills",
+    "Services and Utilities",
+    "Building Services",
+    "Services",
+    "utility accounts",
+    "utility",
+    "Environmental Services",
+    "Heating, ventilation and air conditioning"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

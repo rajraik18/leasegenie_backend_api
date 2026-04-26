@@ -1,0 +1,84 @@
+{
+  "field_id": "tenant_termination",
+  "field_name": "Tenant Termination",
+  "category": "Critical Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "CRITICAL_LEASE_CLAUSES.docx",
+  "overview": "Tenant termination in leases is the legal process of ending a rental agreement before or at its scheduled expiration date.",
+  "preliminary": [
+    "CRITICAL LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "(Continuous Operation | Contraction Option| Co-Tenancy| Exclusive Use| Go-Dark| Landlord\u2019s Recapture Rights | Permitted Use| Purchase Option| Relocation | Renewal Rights | Right of Expansion | ROFO | ROFR| Sales Kick-Out| Tenant Termination | Landlord Termination)",
+    "Summary",
+    "Definitions",
+    "Continuous Operation",
+    "Contraction Option",
+    "Co-Tenancy",
+    "Exclusive Use",
+    "Go-Dark",
+    "Landlord's Recapture Rights",
+    "Permitted Use",
+    "Purchase Option",
+    "Relocation",
+    "Renewal Options",
+    "Right of Expansion",
+    "ROFO",
+    "ROFR",
+    "Sales Kick-Out",
+    "Tenant Termination",
+    "Landlord Termination",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Right Granted",
+      "question_text": "Does the lease contain any clause that refers to Tenant Termination keywords?",
+      "extraction_hint": "Termination clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Option to Terminate Lease",
+    "Co-Tenancy Termination",
+    "Early termination Option",
+    "Option to Terminate",
+    "Go Dark Termination",
+    "Terminate",
+    "Cancellation Option",
+    "Rights of Termination",
+    "Termination Option",
+    "Tenant's Termination Option",
+    "Lessee's Termination Option",
+    "Right to Terminate",
+    "Kick-Out Termination",
+    "Termination"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

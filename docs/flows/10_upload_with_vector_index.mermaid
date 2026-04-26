@@ -1,0 +1,53 @@
+sequenceDiagram
+    autonumber
+    actor User as Client
+    participant API as FastAPI<br/>/tenants/{id}/documents
+    participant DB as SQL Server
+    participant Disk as uploads/<br/>filesystem
+    participant Celery as leasegenie.<br/>index_document task
+    participant OCR as OCR service<br/>pdfplumber + Tesseract
+    participant Embed as Ollama<br/>nomic-embed-text
+    participant Chroma as ChromaDB<br/>(persistent)
+
+    User->>+API: POST /tenants/TENANT_ID/documents<br/>multipart file + document_type + effective_date
+    API->>API: Validate: base_lease first,<br/>max 7 amendments
+    API->>+Disk: Write PDF →<br/>uploads/TENANT_ID/NN_filename.pdf
+    Disk-->>-API: saved
+    API->>+DB: INSERT Document<br/>ocr_status=pending
+    DB-->>-API: doc_id
+    API->>+Celery: index_document_task.delay(doc_id)
+    Celery-->>-API: queued
+    API-->>-User: 201 Created<br/>{doc_id, ocr_status: pending}
+
+    Note over Celery,Chroma: Asynchronous indexing begins
+
+    Celery->>+DB: SELECT Document<br/>by doc_id
+    DB-->>-Celery: row
+    Celery->>+Chroma: has_document(tenant_id, doc_id)?
+    Chroma-->>-Celery: false (new)
+    Celery->>DB: UPDATE ocr_status=ocr_in_progress
+
+    Celery->>+OCR: extract_document_text(pdf_path)
+    OCR->>OCR: pdfplumber per page<br/>Tesseract fallback if <30 chars
+    OCR-->>-Celery: DocumentText(pages)
+
+    Celery->>+OCR: segment_clauses(doc_text)
+    OCR->>OCR: Regex: numbered / Section /<br/>ALL-CAPS headings
+    OCR-->>-Celery: list[Clause]
+
+    loop batched by 32 clauses
+        Celery->>+Embed: POST /api/embeddings<br/>{model: nomic-embed-text, prompt: text}
+        Embed-->>-Celery: 768-dim vector
+        Celery->>+Chroma: upsert(ids, documents,<br/>embeddings, metadatas)
+        Note over Chroma: metadata: tenant_id, doc_id,<br/>doc_label, page, clause, heading
+        Chroma-->>-Celery: ok
+    end
+
+    Celery->>DB: UPDATE ocr_status=indexed
+    Note over Celery: Document is now searchable<br/>via semantic_search tool
+
+    Note over User,API: Later — client polls status
+    User->>+API: GET /tenants/TENANT_ID/documents
+    API->>+DB: SELECT Documents
+    DB-->>-API: rows with ocr_status
+    API-->>-User: [{ocr_status: indexed, ...}]

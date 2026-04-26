@@ -1,0 +1,163 @@
+{
+  "field_id": "lease_expiration_date",
+  "field_name": "Lease Expiration Date",
+  "category": "Basic Information",
+  "output_type": "Number",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "BASIC_INFORMATION.docx",
+  "overview": "General info \u2013 Applicable to all types of leases (office, retail and or industrial). The lease expiration date is the date till which the term of the lease holds good. Scenarios 1: The Lease expiration date Can be fetched from Commencement Letter stating lease expiration date may be provided as an explicit date part of the lease agreement (either in the summary and or the body of the lease) or Formula based on may be a language Lease Commencement Date (LCD) /or Rent Commencement date (RCD) and the Term Ie. LED = LCD/RCD + term definition Scenarios 2: (Amendment available) \u2013 If an amendment is available, then Lease Expiration date to be sourced based on the amendment. Context: Abstraction of the below data fields from the perspective of an Originator or an Underwriter. Does the lease contain a Summary Section Keywords Definition of firm date: Explicit calendar date (e.g., January 1, 2025) Numeric date (01/01/2025) Caution: Ensure there are no strings prior or post the commencement date ie there should be no text or string pre or post the dates. If any sort of text exists like, anticipated to be or est, treat this to be a text and do not stop at this point. If the date is a text extract the descriptive details of the date and then go to QUESTION 4.Caution: Ensure there are no strings prior or post the commencement date ie there should be no text or string pre or post the dates. If any sort of text exists like, anticipated to be or est, treat this to be a text and do not stop at this point. If the date is a text extract the descriptive details of the date and then go to QUESTION 4. Search for: Term Commencement Date Keywords and Commencement Date Keywords Does the lease contain any of the below terms like 10 year term 120 months from lease commencement date Five year term And Commencement Date Keywords",
+  "preliminary": [
+    "BASIC INFORMATION \u2013 MASTER ABSTRACTION GUIDE",
+    "(Building | Landlord Name| Tenant Name| Lease Guarantor| Suite| Lease Date | Property Name| Street Address| City| State)",
+    "General Applicability: All leases (Office, Retail and Industrial)",
+    "Summary",
+    "Definitions",
+    "Building section",
+    "Landlord Name section",
+    "Tenant Name section",
+    "Guarantor section",
+    "Suite Identification section",
+    "Guarantor section",
+    "Leased Premises section",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Commencement Letter",
+      "question_text": "Does the lease contain a summary page?",
+      "extraction_hint": "Extract Date",
+      "output_type": "Date",
+      "search_scope": "summary",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q3",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Explicit Date Mentioned in Summary",
+      "question_text": "Is there a clearly defined \u201cExpiration Date\u201d field in the body of the lease?",
+      "extraction_hint": "Extract Date",
+      "output_type": "Date",
+      "search_scope": "body",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q3",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q3",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "Explicit Date Mentioned in Main Lease",
+      "question_text": "Does the lease provide details of RE Taxes Recovery type or structure?",
+      "extraction_hint": "Extract Date",
+      "output_type": "Date",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q5",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "finalize",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q4",
+      "priority": 4,
+      "condition_type": "Term Based/Conditional language",
+      "question_text": "Does the lease define the term length and also have a commencement date that is driven by a trigger (a trigger is a statement and not a firm concluded date)?",
+      "extraction_hint": "Extract term language",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q5",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q5",
+      "priority": 5,
+      "condition_type": "Silent",
+      "question_text": "Does the clause define a definite term or duration of lease and involve the commencement date and or Rent Commencement Date.",
+      "extraction_hint": "Extract term language",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": null,
+      "no_branch": null,
+      "red_flag": null,
+      "notes": "Please note: if the commencement date is a firm date and the expiration date is defined as a term, then the definition will be the concatenate (\u201cterm definition\u201d + LCD (defined to be xx/xx/xxxx\u201d)Please note: if the commencement date is a firm date and the expiration date is defined as a term, then the definition will be the concatenate (\u201cterm definition\u201d + LCD (defined to be xx/xx/xxxx\u201d) IF YES \u2192 Extract the commencement date key word and the term key words."
+    }
+  ],
+  "keywords": [
+    "Existing Expiration Date",
+    "Expiration Date",
+    "Termination Date",
+    "Extension Period",
+    "Sublease Commencement Date",
+    "Lease Expiration Date",
+    "Fixed Expiration Date",
+    "Term",
+    "Terminate on",
+    "Ends on",
+    "Original Term",
+    "Initial Term",
+    "Expiration Date of Term",
+    "Duration and Commencement",
+    "terminating on"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

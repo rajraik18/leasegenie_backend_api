@@ -1,0 +1,109 @@
+{
+  "field_id": "percentage_rent",
+  "field_name": "Percentage Rent",
+  "category": "Financial Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": false,
+    "Office": false,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "FINANCIAL_TERMS.docx",
+  "overview": "General info \u2013 Applicable to only Retail Leases Percentage Rent Breakpoint is natural Breakpoint calculated based on ratio of Percentage explicitly provided in the definition",
+  "preliminary": [
+    "FINANCIAL TERMS \u2013 MASTER ABSTRACTION GUIDE",
+    "(Lease Commencement Date | Lease Expiration Date | Term Commencement Date| Rent Commencement Date| Lease Term| Square Footage| Annual Rent| Future Rent Steps | Percentage Rent and Breakpoint| Most Recent Lease Start Date| Security Deposit)",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Percentage Stated",
+      "question_text": "Does the lease have a Summary page with the Percentage Rent and Breakpoint Keywords",
+      "extraction_hint": "Extract %",
+      "output_type": "Numeric",
+      "search_scope": "summary",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "goto",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Dollar Amount",
+      "question_text": "Does the lease contain clauses with the Percentage Rent and Breakpoint Keywords",
+      "extraction_hint": "Extract Amount",
+      "output_type": "Currency",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q3",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "flag",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "Definition Based",
+      "question_text": "Is there a percentage rate specified separately based on the below key words",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "flag",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": "Please note, the next phase will include separate guidelines to be followed for concluding Natural Breakpoint.Please note, the next phase will include separate guidelines to be followed for concluding Natural Breakpoint."
+    }
+  ],
+  "keywords": [
+    "Percentage Rent",
+    "Annual Percentage Rent",
+    "Overage Rent",
+    "Turnover Rent",
+    "Additional Rent",
+    "Percentage Rent Factor"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

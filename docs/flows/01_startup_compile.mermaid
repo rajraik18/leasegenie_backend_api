@@ -1,0 +1,35 @@
+flowchart TD
+    Start([uvicorn app.main:app]) --> InitDB[init_db<br/>Create SQLAlchemy tables]
+    InitDB --> LoadBRD[Load BRD spreadsheet<br/>data/LeaseGenie_BRD.xlsx]
+    LoadBRD --> ParseFields[Parse 72 fields<br/>categories, applicability,<br/>987 keywords]
+
+    ParseFields --> CheckCompiled{Compiled playbooks<br/>exist at<br/>data/playbooks_compiled/?}
+
+    CheckCompiled -->|Yes| LoadPlaybooks[Load JSON playbooks<br/>into memory cache]
+    CheckCompiled -->|No| RunCompiler[Run playbook compiler]
+
+    RunCompiler --> ReadDocx[Parse 5 .docx guides<br/>BASIC / FINANCIAL /<br/>REIMBURSEMENTS /<br/>CRITICAL / OTHER]
+    ReadDocx --> ParseDecisionTrees[Extract QUESTION N blocks<br/>+ IF YES/IF NO branches<br/>per field]
+
+    ParseDecisionTrees --> ReadXlsx[Parse Questions.xlsx<br/>Condition Type, Priority,<br/>Output, Red Flag Logic]
+
+    ReadXlsx --> Merge[Merge decision tree<br/>+ xlsx metadata]
+    Merge --> MapAliases[Map docx headings →<br/>canonical BRD slugs<br/>via DOCX_FIELD_ALIASES]
+    MapAliases --> NormalizeActions[Convert human branch text<br/>to PlaybookAction<br/>GOTO/EXTRACT/FINALIZE/<br/>RECORD_NONE/RECORD_LITERAL/<br/>FLAG_REVIEW]
+
+    NormalizeActions --> DetectDeps[Detect dependencies<br/>Allowance → LCD<br/>Lease Term → LCD + LED]
+    DetectDeps --> DetectProp[Detect property restrictions<br/>retail-only / office-only<br/>from H4 headings]
+
+    DetectProp --> WriteJSON[Write 71 JSON files<br/>+ _index.json]
+    WriteJSON --> LoadPlaybooks
+
+    LoadPlaybooks --> RegisterRouters[Register API routers<br/>orders / documents /<br/>extraction / abstraction /<br/>fields / playbooks]
+
+    RegisterRouters --> LogReady[Log: LeaseGenie ready<br/>fields=72, playbooks=71<br/>ollama=qwen2.5:32b-instruct]
+    LogReady --> Ready([Service accepting<br/>requests on :8000])
+
+    style Start fill:#2d6cdf,color:#fff
+    style Ready fill:#2ea043,color:#fff
+    style RunCompiler fill:#fbbf24,color:#000
+    style CheckCompiled fill:#f97316,color:#fff
+    style WriteJSON fill:#a855f7,color:#fff

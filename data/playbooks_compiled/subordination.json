@@ -1,0 +1,79 @@
+{
+  "field_id": "subordination",
+  "field_name": "Subordination",
+  "category": "Other Lease Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "OTHER_LEASE_CLAUSES.docx",
+  "overview": "A subordination provision in a lease is\u00a0a clause where a tenant agrees that their leasehold interest is junior to a current or future mortgage on the property. This allows the lender\u2019s rights to take priority in a foreclosure, often requiring tenants to sign an SNDA (Subordination, Non-Disturbance, and Attornment) to ensure their lease survives.",
+  "preliminary": [
+    "OTHER LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "(Allowance | Alteration | Assignment and Subletting| Casualty| Condemnation | Hazardous Materials | Holdover | Landlord Restriction | Monetary Default | Non \u2013 Monetary Default | Parking | Repair and Maintenance | Reporting of Financial Information | Reporting of Gross Sales | Sublease Provision | Subordination)",
+    "General Applicability: All leases (Office, Retail and Industrial) except for,",
+    "Reporting of Gross Sales \u2013 Applicable only in Retail leases",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Automatic",
+      "question_text": "Does the lease contain any clause that refers to Subordination keywords?",
+      "extraction_hint": "Extract Clause",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Mortgage or Sale by Landlord",
+    "Mortgage and Subordination",
+    "Subordination to Primary Lease",
+    "Right to Mortgage",
+    "SNDA",
+    "NDA",
+    "Subordinate",
+    "Subordination",
+    "Subordination and Attornment",
+    "Subordination and Estoppel Certificates",
+    "Subordination and Non Disturbance",
+    "Subordination, Attornment and Estoppel Certificate",
+    "Subordinations and Estoppels",
+    "Subordination and Financing",
+    "Estoppels, Financial, subordination, Attornment",
+    "Subordination by Tenant",
+    "Mortgages",
+    "Attorn",
+    "Mortgages and Title",
+    "Subordination of Lease",
+    "Subordination to Master Lease",
+    "Attornment"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}

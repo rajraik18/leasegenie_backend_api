@@ -1,0 +1,37 @@
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+pydantic==2.9.2
+pydantic-settings==2.5.2
+sqlalchemy==2.0.35
+python-multipart==0.0.12
+openpyxl==3.1.5
+
+# Database drivers
+# PostgreSQL (primary) — requires libpq on the host (psycopg2-binary bundles it)
+psycopg2-binary==2.9.10
+# pgvector Python client — registers the VECTOR type with SQLAlchemy
+pgvector==0.3.6
+# SQLite fallback is built into Python
+
+# PDF + OCR
+pdfplumber==0.11.4
+pytesseract==0.3.13
+pillow==10.4.0
+
+# Text search
+rank_bm25==0.2.2
+rapidfuzz==3.10.0
+
+# Async task queue
+celery==5.4.0
+redis==5.1.1
+
+# Local LLM
+ollama==0.3.3
+
+# Vector store: pgvector (in postgres) — see scripts/db/schema.sql
+# (ChromaDB removed in v2.0; embeddings now live in clause_embeddings table)
+
+# Tests
+pytest==8.3.3
+httpx==0.27.2

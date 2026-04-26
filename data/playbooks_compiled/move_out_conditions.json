@@ -1,0 +1,162 @@
+{
+  "field_id": "move_out_conditions",
+  "field_name": "Move-Out Conditions",
+  "category": "Other Lease Clauses",
+  "output_type": "Text",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "OTHER_LEASE_CLAUSES.docx",
+  "overview": "A move-out conditions clause specifies the physical state in which Tenant must deliver the Premises upon expiration or earlier termination of the Lease. These requirements typically include: (a) broom-clean condition, (b) HVAC service certification by a qualified contractor, (c) repair of all damage beyond ordinary wear and tear, (d) removal of Tenant-installed equipment, signage, and wiring, (e) operable condition of lighting, plumbing, dock doors/levelers, (f) patching of wall penetrations, and (g) return of all keys and access devices. Leases often include a detailed exhibit (e.g., 'Move-Out Checklist') enumerating 10-20 specific items.",
+  "preliminary": [
+    "OTHER LEASE CLAUSES \u2013 MASTER ABSTRACTION GUIDE",
+    "General Applicability: All leases (Office, Retail and Industrial).",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Definition Based",
+      "question_text": "Does the lease contain a move-out conditions, surrender, or 'Move-Out Checklist' clause specifying the condition in which Tenant must deliver the Premises?",
+      "extraction_hint": "Extract complete move-out clause including surrender standard, HVAC/dock equipment requirements, removal obligations, and any exhibit reference (e.g., 'See Exhibit G' or 'See Addendum 9').",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [
+        "surrender",
+        "broom clean",
+        "move-out",
+        "move out",
+        "condition as received",
+        "deliver the Premises"
+      ],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q2",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "literal",
+        "goto": null,
+        "literal": "None (no explicit move-out provisions)",
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": "Common locations: Section 4 (HMBP-BCP), Paragraph 21 + Addendum 9 (ProLogis), dedicated 'Move-Out Checklist' exhibit."
+    },
+    {
+      "id": "Q2",
+      "priority": 2,
+      "condition_type": "Definition Based",
+      "question_text": "Is an HVAC certification or maintenance contract required at move-out?",
+      "extraction_hint": "Extract the HVAC-related move-out requirement.",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [
+        "HVAC",
+        "heating, ventilation",
+        "air conditioning",
+        "service contract",
+        "certification"
+      ],
+      "yes_branch": {
+        "type": "extract",
+        "goto": "Q3",
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": "Q3",
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    },
+    {
+      "id": "Q3",
+      "priority": 3,
+      "condition_type": "Definition Based",
+      "question_text": "Does Tenant have removal or restoration obligations for alterations or improvements?",
+      "extraction_hint": "Extract the removal/restoration obligation.",
+      "output_type": "Text",
+      "search_scope": "all",
+      "keywords": [
+        "remove all",
+        "restore the Premises",
+        "Tenant-Made Alterations",
+        "leasehold improvements",
+        "Tenant's Property"
+      ],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Move-Out Conditions",
+    "Move Out Checklist",
+    "Surrender of Premises",
+    "Surrender",
+    "surrender the Premises",
+    "deliver the Premises",
+    "broom clean",
+    "broom-clean",
+    "broom-swept",
+    "ordinary wear and tear",
+    "reasonable wear and tear",
+    "HVAC certification",
+    "HVAC inspection",
+    "preventive maintenance",
+    "dock doors",
+    "dock levelers",
+    "truck door",
+    "remove all signs",
+    "remove Tenant's Property",
+    "remove racking",
+    "restoration",
+    "restore the Premises",
+    "tenant improvements",
+    "leasehold improvements",
+    "return all keys",
+    "access cards",
+    "key cards",
+    "patched",
+    "repair any damage",
+    "grind down",
+    "anchors flush"
+  ],
+  "summary_keywords": [
+    "Move-Out Conditions",
+    "Move Out Checklist",
+    "Surrender of Premises",
+    "Surrender",
+    "surrender the Premises",
+    "deliver the Premises",
+    "broom clean",
+    "broom-clean"
+  ],
+  "amendment_controls": true,
+  "depends_on": []
+}

@@ -1,0 +1,92 @@
+flowchart TD
+    subgraph Sources [Red flag sources]
+        direction TB
+        Src1[1 - Playbook question<br/>red_flag column<br/>from Questions.xlsx<br/>'Red Flag Logic']
+        Src2[2 - Specialist must-have rule<br/>Tenant Name blank<br/>triggers needs_review]
+        Src3[3 - Reconciliation agent<br/>cross-document checks]
+        Src4[4 - Reconciliation agent<br/>cross-field checks]
+    end
+
+    subgraph Extract [During extraction flow]
+        direction TB
+        PBExec[PlaybookExecutor runs<br/>question with red_flag defined] --> YesAns{LLM says YES?}
+        YesAns -->|yes| AppendRF[Append red_flag<br/>to result.red_flags]
+        Src1 -.-> PBExec
+
+        Spec[Specialist post_process]
+        Src2 -.-> Spec
+        Spec --> MustHaveCheck{Tenant/Landlord<br/>= 'None'?}
+        MustHaveCheck -->|yes| SetReview[needs_review = true<br/>append to red_flags]
+    end
+
+    subgraph Recon [After all specialists]
+        direction TB
+        ReconAgent[ReconciliationAgent.run]
+        Src3 -.-> ReconAgent
+        Src4 -.-> ReconAgent
+
+        ReconAgent --> RSF[RSF_MISMATCH<br/>if values differ across docs<br/>severity: warning]
+        ReconAgent --> Suite[SUITE_CONFLICT<br/>severity: warning]
+        ReconAgent --> Name[NAME_VARIATION<br/>severity: info]
+        ReconAgent --> Date[DATE_INCONSISTENCY<br/>LED before LCD<br/>severity: critical]
+        ReconAgent --> TermMath[LEASE_TERM_MATH_MISMATCH<br/>stated vs LED-LCD<br/>severity: warning]
+        ReconAgent --> Rent[RENT_CHANGE_ACROSS_DOCS<br/>info only]
+        ReconAgent --> LowConf[LOW_CONFIDENCE<br/>count of fields <0.5<br/>severity: info]
+        ReconAgent --> ReviewRollup[MANUAL_REVIEW_REQUIRED<br/>count with needs_review<br/>severity: warning]
+    end
+
+    subgraph Persist [Persistence]
+        direction TB
+        AppendRF --> PersistField[pipeline persists<br/>to FieldValue.question_answers<br/>red_flags: list<br/>needs_review: bool]
+        SetReview --> PersistField
+        RSF --> PersistRecon
+        Suite --> PersistRecon
+        Name --> PersistRecon
+        Date --> PersistRecon
+        TermMath --> PersistRecon
+        Rent --> PersistRecon
+        LowConf --> PersistRecon
+        ReviewRollup --> PersistRecon
+
+        PersistRecon[Pipeline writes<br/>one AuditLog row per flag<br/>action=red_flag<br/>new_value='[CODE/severity] msg']
+    end
+
+    subgraph Retrieve [Retrieval via API]
+        direction TB
+        Client([Client GET<br/>/tenants/ID/red-flags]) --> Endpoint[abstraction.get_red_flags]
+
+        Endpoint --> FetchRecon[SELECT * FROM audit_log<br/>WHERE action='red_flag']
+        FetchRecon --> ParseMsg[Parse '[CODE/severity] message'<br/>into RedFlag object]
+        ParseMsg --> Source1[Reconciliation flags]
+
+        Endpoint --> ScanFV[Scan FieldValue rows<br/>for question_answers.red_flags<br/>and needs_review]
+        ScanFV --> ExpandPB[Emit PLAYBOOK_RED_FLAG<br/>and MANUAL_REVIEW flags<br/>per field]
+        ExpandPB --> Source2[Playbook + per-field flags]
+
+        Endpoint --> LegacyCheck[Defense-in-depth:<br/>re-run RSF/suite/date<br/>checks on current state]
+        LegacyCheck --> Source3[Legacy rule flags]
+
+        Source1 --> Combine[Combine into<br/>list of RedFlag]
+        Source2 --> Combine
+        Source3 --> Combine
+
+        Combine --> Response([200 OK<br/>list of RedFlag<br/>with code, severity,<br/>message, field_ids,<br/>context])
+    end
+
+    PersistField -.-> ScanFV
+    PersistRecon -.-> FetchRecon
+
+    style Src1 fill:#2d6cdf,color:#fff
+    style Src2 fill:#2d6cdf,color:#fff
+    style Src3 fill:#2d6cdf,color:#fff
+    style Src4 fill:#2d6cdf,color:#fff
+    style Date fill:#dc2626,color:#fff
+    style RSF fill:#f97316,color:#fff
+    style Suite fill:#f97316,color:#fff
+    style TermMath fill:#f97316,color:#fff
+    style ReviewRollup fill:#f97316,color:#fff
+    style Name fill:#fbbf24,color:#000
+    style Rent fill:#fbbf24,color:#000
+    style LowConf fill:#fbbf24,color:#000
+    style Response fill:#2ea043,color:#fff
+    style Client fill:#2d6cdf,color:#fff

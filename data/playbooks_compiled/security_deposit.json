@@ -1,0 +1,64 @@
+{
+  "field_id": "security_deposit",
+  "field_name": "Security Deposit",
+  "category": "Financial Clauses",
+  "output_type": "Number",
+  "property_applicability": {
+    "Retail": true,
+    "Industrial": true,
+    "Office": true,
+    "Mixed-Use": true
+  },
+  "abstract_applicability": {},
+  "source_docx": "FINANCIAL_TERMS.docx",
+  "overview": "General info \u2013 Applicable to all types of leases (office, retail and or industrial). A security deposit is an upfront, typically refundable payment made by a tenant to a landlord at the start of a lease, designed to act as financial protection against damages, unpaid rent, or breach of lease covenants. QUESTION 2 If security deposit amount specified in the main section by Security Deposit Keywords QUESTION 3 If security deposit section is available in main section,",
+  "preliminary": [
+    "FINANCIAL TERMS \u2013 MASTER ABSTRACTION GUIDE",
+    "(Lease Commencement Date | Lease Expiration Date | Term Commencement Date| Rent Commencement Date| Lease Term| Square Footage| Annual Rent| Future Rent Steps | Percentage Rent and Breakpoint| Most Recent Lease Start Date| Security Deposit)",
+    "Summary",
+    "Definitions",
+    "Sections",
+    "Addenda & Amendments",
+    "If conflict exists \u2192 Amendment controls."
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "priority": 1,
+      "condition_type": "Dollar Amount",
+      "question_text": "If security deposit amount specified in the summary section by using Security Deposit Keywords",
+      "extraction_hint": "Extract Amount",
+      "output_type": "Currency",
+      "search_scope": "summary",
+      "keywords": [],
+      "yes_branch": {
+        "type": "extract",
+        "goto": null,
+        "literal": null,
+        "also_extract": true
+      },
+      "no_branch": {
+        "type": "none",
+        "goto": null,
+        "literal": null,
+        "also_extract": false
+      },
+      "red_flag": null,
+      "notes": null
+    }
+  ],
+  "keywords": [
+    "Security Deposit",
+    "Security Deposit Reduction",
+    "Security/Damage Deposit",
+    "Rental Deposit",
+    "Letter of Credit",
+    "LOC",
+    "Advance Deposit",
+    "Deposit",
+    "Rent deposit"
+  ],
+  "summary_keywords": [],
+  "amendment_controls": true,
+  "depends_on": []
+}
