@@ -35,6 +35,7 @@ try:
     from paddleocr import PaddleOCR  # type: ignore
     _PADDLE_AVAILABLE = True
     _paddle_singleton: Optional["PaddleOCR"] = None
+    _paddle_lock = __import__("threading").Lock()
 except ImportError:  # pragma: no cover
     pass
 
@@ -182,18 +183,21 @@ def _is_garbled(text: str) -> bool:
 # ---------------------------------------------------------------------------
 
 def _get_paddle():
-    """Lazy-load PaddleOCR (heavy; don't load unless needed)."""
+    """Lazy-load PaddleOCR (heavy; don't load unless needed). Thread-safe."""
     global _paddle_singleton
     if not _PADDLE_AVAILABLE:
         return None
-    if _paddle_singleton is None:
-        try:
-            _paddle_singleton = PaddleOCR(
-                use_angle_cls=True, lang="en", show_log=False, use_gpu=False,
-            )
-        except Exception as exc:
-            logger.warning("PaddleOCR init failed: %s — falling back to Tesseract", exc)
-            return None
+    if _paddle_singleton is not None:
+        return _paddle_singleton
+    with _paddle_lock:
+        if _paddle_singleton is None:
+            try:
+                _paddle_singleton = PaddleOCR(
+                    use_angle_cls=True, lang="en", show_log=False, use_gpu=False,
+                )
+            except Exception as exc:
+                logger.warning("PaddleOCR init failed: %s — falling back to Tesseract", exc)
+                return None
     return _paddle_singleton
 
 

@@ -1,5 +1,6 @@
 """Celery app. Runs in eager mode by default for dev (no broker needed)."""
 from celery import Celery
+from celery.schedules import crontab
 
 from app.config import settings
 
@@ -26,6 +27,21 @@ celery_app.conf.update(
     # Don't prefetch lots of tasks per worker — keeps long extractions from
     # being held behind a busy worker.
     worker_prefetch_multiplier=1,
+    # File-retention beat schedule. The worker is launched with `-B` so
+    # beat ticks alongside the worker in a single process — safe because
+    # the project deploys exactly one worker process per host.
+    beat_schedule={
+        "cleanup-old-uploads": {
+            "task": "leasegenie.cleanup_old_uploads",
+            # Daily at 02:00 local time.
+            "schedule": crontab(hour=2, minute=0),
+        },
+        "cleanup-old-exports": {
+            "task": "leasegenie.cleanup_old_exports",
+            # Daily at 02:15 local time -- staggered to avoid concurrent disk churn.
+            "schedule": crontab(hour=2, minute=15),
+        },
+    },
 )
 
 # Import tasks so Celery registers them

@@ -28,26 +28,40 @@ _RETRYABLE = (ConnectionError, TimeoutError, OSError)
 
 
 def _retry_call(fn: Callable[[], Any], *, label: str) -> Any:
+    # Lazy import so pytest collection of services that import this module
+    # doesn't pay the prometheus_client import cost in non-API tests.
+    from app.observability import OLLAMA_CALL_DURATION, OLLAMA_CALLS
+
+    kind = label.split(".", 1)[1] if "." in label else label
     max_attempts = max(1, settings.ollama_max_retries)
     delay = max(0.1, settings.ollama_retry_initial_seconds)
     last_exc: Exception | None = None
     for attempt in range(1, max_attempts + 1):
+        started = time.perf_counter()
         try:
-            return fn()
+            result = fn()
         except _RETRYABLE as exc:
             last_exc = exc
             if attempt == max_attempts:
+                OLLAMA_CALLS.labels(kind=kind, outcome="error").inc()
                 logger.error("%s failed after %d attempts: %s", label, attempt, exc)
                 raise
+            OLLAMA_CALLS.labels(kind=kind, outcome="retry").inc()
             logger.warning(
                 "%s attempt %d/%d failed: %s -- retrying in %.1fs",
                 label, attempt, max_attempts, exc, delay,
             )
             time.sleep(delay)
             delay *= 2
+            continue
         except Exception as exc:
+            OLLAMA_CALLS.labels(kind=kind, outcome="error").inc()
             logger.warning("%s failed (no retry): %s", label, exc)
             raise
+        # Success path
+        OLLAMA_CALL_DURATION.labels(kind=kind).observe(time.perf_counter() - started)
+        OLLAMA_CALLS.labels(kind=kind, outcome="ok").inc()
+        return result
     # Defensive — should never hit, but keep mypy happy.
     if last_exc is not None:
         raise last_exc

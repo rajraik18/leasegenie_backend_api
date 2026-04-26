@@ -248,24 +248,38 @@ class _NoOpVectorStore:
 # Singleton accessor
 # ---------------------------------------------------------------------------
 
+import threading as _threading
+
 _singleton: VectorStore | None = None
+_singleton_lock = _threading.Lock()
 
 
 def get_vector_store() -> VectorStore:
+    """Thread-safe lazy singleton.
+
+    Multiple Celery threads may race here on first touch. The lock makes
+    sure only one VectorStore lands in `_singleton` -- without it a
+    transient PgVectorStore init failure on one thread could overwrite
+    a successful PgVectorStore from another with the NoOp fallback.
+    """
     global _singleton
     if _singleton is not None:
         return _singleton
 
-    if settings.is_postgres:
-        try:
-            _singleton = PgVectorStore()
-            logger.info("Vector store: pgvector (Postgres)")
-        except Exception as exc:
-            logger.error("PgVectorStore init failed: %s — using NoOp store", exc)
+    with _singleton_lock:
+        if _singleton is not None:
+            return _singleton
+
+        if settings.is_postgres:
+            try:
+                _singleton = PgVectorStore()
+                logger.info("Vector store: pgvector (Postgres)")
+            except Exception as exc:
+                logger.error("PgVectorStore init failed: %s — using NoOp store", exc)
+                _singleton = _NoOpVectorStore()
+        else:
+            logger.info("Vector store: NoOp (SQLite dev mode — uses in-memory cosine)")
             _singleton = _NoOpVectorStore()
-    else:
-        logger.info("Vector store: NoOp (SQLite dev mode — uses in-memory cosine)")
-        _singleton = _NoOpVectorStore()
 
     return _singleton
 

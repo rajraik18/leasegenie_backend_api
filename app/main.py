@@ -29,6 +29,7 @@ from app.api.v1 import abstraction, documents, extract_pdf, extraction, fields, 
 from app.config import settings
 from app.core.reference_data import get_reference_data
 from app.db.session import engine, init_db
+from app.observability import PrometheusMiddleware, router as metrics_router
 
 
 # ---------------------------------------------------------------------------
@@ -227,6 +228,7 @@ def create_app() -> FastAPI:
     )
 
     app.add_middleware(RequestIdMiddleware)
+    app.add_middleware(PrometheusMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_allow_origins,
@@ -250,6 +252,9 @@ def create_app() -> FastAPI:
     app.include_router(playbooks.router,   prefix=prefix, dependencies=auth_dep)
     app.include_router(extract_pdf.router, prefix=prefix, dependencies=auth_dep)
     app.include_router(schemas.router,     prefix=prefix, dependencies=auth_dep)
+
+    # /metrics is intentionally unauthenticated — IP-restrict in the reverse proxy.
+    app.include_router(metrics_router)
 
     @app.on_event("startup")
     def _startup() -> None:

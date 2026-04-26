@@ -124,10 +124,14 @@ try {
     )
     Start-LgProcess -Name 'api' -FilePath $py -ArgumentList $apiArgs -Mode $mode | Out-Null
 
+    # `-B` runs the beat scheduler embedded in the worker so daily
+    # cleanup tasks fire without a separate process. Safe because the
+    # project deploys exactly one worker per host.
     $workerArgs = @(
         '-m', 'celery',
         '-A', 'app.workers.celery_app:celery_app',
         'worker',
+        '-B',
         '--loglevel=info',
         "--concurrency=$workerConcurrency",
         '-P', $workerPool

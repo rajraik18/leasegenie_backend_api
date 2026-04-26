@@ -60,11 +60,23 @@ class Embedder:
         return [self.embed_one(t) for t in texts]
 
 
+import threading as _threading
+
 _singleton: Embedder | None = None
+_singleton_lock = _threading.Lock()
 
 
 def get_embedder() -> Embedder:
+    """Thread-safe lazy singleton.
+
+    The Coordinator runs under Celery's `-P threads` pool so multiple
+    extraction tasks can race the first-touch initialisation. We
+    double-check + lock so only one Embedder ever lands in `_singleton`.
+    """
     global _singleton
-    if _singleton is None:
-        _singleton = Embedder()
+    if _singleton is not None:
+        return _singleton
+    with _singleton_lock:
+        if _singleton is None:
+            _singleton = Embedder()
     return _singleton
