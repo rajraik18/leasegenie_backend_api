@@ -9,12 +9,49 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
 from app.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Retry helper -- tiny in-house implementation so we don't take a dep on
+# `tenacity`. Retries on connection-style errors only; logical errors from
+# Ollama (bad model, OOM) are surfaced immediately.
+# ---------------------------------------------------------------------------
+
+_RETRYABLE = (ConnectionError, TimeoutError, OSError)
+
+
+def _retry_call(fn: Callable[[], Any], *, label: str) -> Any:
+    max_attempts = max(1, settings.ollama_max_retries)
+    delay = max(0.1, settings.ollama_retry_initial_seconds)
+    last_exc: Exception | None = None
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return fn()
+        except _RETRYABLE as exc:
+            last_exc = exc
+            if attempt == max_attempts:
+                logger.error("%s failed after %d attempts: %s", label, attempt, exc)
+                raise
+            logger.warning(
+                "%s attempt %d/%d failed: %s -- retrying in %.1fs",
+                label, attempt, max_attempts, exc, delay,
+            )
+            time.sleep(delay)
+            delay *= 2
+        except Exception as exc:
+            logger.warning("%s failed (no retry): %s", label, exc)
+            raise
+    # Defensive — should never hit, but keep mypy happy.
+    if last_exc is not None:
+        raise last_exc
+    raise RuntimeError(f"{label} produced no result")
 
 
 @dataclass
@@ -79,11 +116,7 @@ class OllamaAgentClient:
         if tools:
             kwargs["tools"] = tools
 
-        try:
-            resp = self._client.chat(**kwargs)
-        except Exception as exc:
-            logger.warning("Ollama chat failed: %s", exc)
-            raise
+        resp = _retry_call(lambda: self._client.chat(**kwargs), label="ollama.chat")
 
         msg = resp.get("message", {}) or {}
         content = msg.get("content", "") or ""
@@ -124,14 +157,17 @@ class OllamaAgentClient:
         temperature: float | None = None,
     ) -> dict[str, Any]:
         """Ask for strict JSON (no tools). Returns the parsed dict."""
-        resp = self._client.chat(
-            model=self.model,
-            messages=messages,
-            format="json",
-            options={
-                "temperature": temperature if temperature is not None else self.temperature,
-                "num_ctx": self.num_ctx,
-            },
+        resp = _retry_call(
+            lambda: self._client.chat(
+                model=self.model,
+                messages=messages,
+                format="json",
+                options={
+                    "temperature": temperature if temperature is not None else self.temperature,
+                    "num_ctx": self.num_ctx,
+                },
+            ),
+            label="ollama.chat_json",
         )
         content = (resp.get("message") or {}).get("content", "") or "{}"
         return _safe_loads(content) or {}
