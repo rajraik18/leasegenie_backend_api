@@ -23,7 +23,9 @@ GET /jobs/{job_id}/result?format=json|xlsx
 from __future__ import annotations
 
 import logging
+import re
 import shutil
+import urllib.parse
 import uuid
 from pathlib import Path
 
@@ -42,6 +44,15 @@ from app.workers.tasks import extract_tenant_task, index_document_task
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/extract", tags=["extract"])
+
+_SAFE_FILENAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
+
+
+def _safe_filename(raw: str | None, fallback: str) -> str:
+    """Strip directory components and reduce to [A-Za-z0-9._-]."""
+    base = Path(raw or fallback).name or fallback
+    cleaned = _SAFE_FILENAME_RE.sub("_", base).strip("._") or fallback
+    return cleaned[:200]
 
 
 @router.post(
@@ -226,7 +237,7 @@ def extract_pdf(
     for idx, upload in enumerate(files):
         doc_type = "base_lease" if idx == 0 else "amendment"
         document_order = 0 if idx == 0 else idx
-        safe_name = (upload.filename or f"doc-{idx}.pdf").replace("/", "_").replace("\\", "_")
+        safe_name = _safe_filename(upload.filename, f"doc-{idx}.pdf")
         path = dest_dir / f"{document_order:02d}_{safe_name}"
 
         # Stream-write with size enforcement. If upload.size was None during
@@ -366,9 +377,16 @@ def get_job_result(
         logger.exception("excel export failed for job %s", job_id)
         raise HTTPException(status_code=500, detail=f"excel export failed: {exc}")
 
-    filename = f"lease_abstraction_{abstraction.tenant_name.replace(' ', '_')}_{job_id[:8]}.xlsx"
+    raw_name = f"lease_abstraction_{abstraction.tenant_name}_{job_id[:8]}.xlsx"
+    ascii_name = _safe_filename(raw_name, f"lease_abstraction_{job_id[:8]}.xlsx")
+    utf8_name = urllib.parse.quote(raw_name, safe="")
     return Response(
         content=blob,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{ascii_name}"; '
+                f"filename*=UTF-8''{utf8_name}"
+            ),
+        },
     )

@@ -1,6 +1,8 @@
 """Documents API — upload base lease + amendments per tenant."""
 from __future__ import annotations
 
+import logging
+import re
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -13,9 +15,20 @@ from app.db.session import get_db
 from app.models.orm import Document, Tenant
 from app.schemas.models import DocumentOut
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/tenants", tags=["documents"])
 
 MAX_AMENDMENTS = 7  # BRD User Story #4
+
+_SAFE_FILENAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
+
+
+def _safe_filename(raw: str | None, fallback: str) -> str:
+    """Strip directory components and reduce to [A-Za-z0-9._-]."""
+    base = Path(raw or fallback).name or fallback
+    cleaned = _SAFE_FILENAME_RE.sub("_", base).strip("._") or fallback
+    return cleaned[:200]
 
 
 @router.post(
@@ -64,7 +77,7 @@ def upload_document(
     filename = file.filename or f"upload-{document_order}.pdf"
     dest_dir: Path = settings.upload_dir / tenant_id
     dest_dir.mkdir(parents=True, exist_ok=True)
-    safe_name = filename.replace("/", "_").replace("\\", "_")
+    safe_name = _safe_filename(filename, f"upload-{document_order}.pdf")
     dest = dest_dir / f"{document_order:02d}_{safe_name}"
     with dest.open("wb") as fh:
         shutil.copyfileobj(file.file, fh)
@@ -90,8 +103,7 @@ def upload_document(
     except Exception as exc:
         # If Celery is down, we still accept the upload — extraction
         # will OCR again as a fallback.
-        import logging
-        logging.getLogger(__name__).warning("index task dispatch failed: %s", exc)
+        logger.warning("index task dispatch failed: %s", exc)
 
     return DocumentOut.model_validate(doc)
 
@@ -112,13 +124,13 @@ def delete_document(tenant_id: str, document_id: str, db: Session = Depends(get_
         raise HTTPException(status_code=404, detail="document not found")
     try:
         Path(doc.storage_path).unlink(missing_ok=True)
-    except Exception:
-        pass
+    except OSError as exc:
+        logger.warning("could not unlink %s: %s", doc.storage_path, exc)
     # Remove from vector store as well
     try:
         from app.services.vector_store import get_vector_store
-        get_vector_store().delete_document(tenant_id, document_id)
-    except Exception:
-        pass
+        get_vector_store().delete_document(document_id)
+    except Exception as exc:
+        logger.warning("vector store delete failed for %s: %s", document_id, exc)
     db.delete(doc)
     db.commit()
