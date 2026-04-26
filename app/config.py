@@ -8,11 +8,15 @@ class Settings(BaseSettings):
 
     # API
     api_v1_prefix: str = "/api/v1"
-    debug: bool = True
+    debug: bool = False
     project_name: str = "LeaseGenie API"
+    # Comma-separated origins (parsed by pydantic-settings into list[str])
+    cors_allow_origins: list[str] = ["http://localhost:3000"]
 
-    # Database — Postgres + pgvector primary, SQLite fallback for dev
-    database_url: str = "postgresql+psycopg2://leasegenie:leasegenie@postgres:5432/leasegenie"
+    # Database — Postgres + pgvector primary, SQLite fallback for dev.
+    # The default uses CHANGE_ME placeholders so a misconfigured deploy
+    # fails loudly instead of silently running with predictable creds.
+    database_url: str = "postgresql+psycopg2://CHANGE_ME:CHANGE_ME@postgres:5432/leasegenie"
 
     # Celery
     celery_broker_url: str = "memory://"
