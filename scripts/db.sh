@@ -44,9 +44,10 @@ detect_compose
 
 # ---- Read host Postgres connection details from .env ----
 db_url=$(grep -E '^DATABASE_URL=' .env 2>/dev/null | cut -d= -f2- || echo "")
-# Default: parse from the standard hybrid URL
 if [[ -z "${db_url}" ]]; then
-    db_url="postgresql+psycopg2://leasegenie:leasegenie@localhost:5432/leasegenie"
+    echo "ERROR: DATABASE_URL not found in .env — refusing to fall back to default credentials." >&2
+    echo "Copy .env.example to .env and fill in real values before running this script." >&2
+    exit 1
 fi
 
 # Parse user / pass / host / port / db from URL
@@ -60,12 +61,15 @@ PG_DB=$(echo "${db_url}"   | sed -E 's|.*/([^?]+).*|\1|')
 # When this script runs ON the host, host.docker.internal -> localhost
 if [[ "${PG_HOST}" == "host.docker.internal" ]]; then PG_HOST="localhost"; fi
 
-# Sanity defaults
-PG_USER="${PG_USER:-leasegenie}"
-PG_PASS="${PG_PASS:-leasegenie}"
+# Sanity defaults — only sanitise host/port/db, NOT user/pass.
 PG_HOST="${PG_HOST:-localhost}"
 PG_PORT="${PG_PORT:-5432}"
 PG_DB="${PG_DB:-leasegenie}"
+
+if [[ -z "${PG_USER}" || -z "${PG_PASS}" ]]; then
+    echo "ERROR: could not parse user / password from DATABASE_URL — refusing to use defaults." >&2
+    exit 1
+fi
 
 # ---- Helpers ----
 
