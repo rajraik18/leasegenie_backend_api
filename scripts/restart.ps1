@@ -1,109 +1,76 @@
-﻿<#
+<#
 .SYNOPSIS
-    Restart the LeaseGenie containers (HYBRID deployment).
+    Restart the LeaseGenie API and Celery worker (native processes).
 
 .DESCRIPTION
-    Only api+worker run in Docker. Postgres, Redis, Ollama are local installs
-    on the host and are NOT restarted by this script.
+    Stops both processes, then starts them again. Postgres, Redis, and
+    Ollama stay up — they run on the host as native services.
 
-    Strategies:
-        -Rolling   (Default) docker compose restart api worker. ~15s.
-        -Full      Stop + up. ~30s. Use after compose.yml changes.
-        -Hard      Down + up. ~60s. Use after Dockerfile changes.
-
-    -Build can be combined with any strategy to rebuild images first.
+    -Foreground   Restart in foreground mode (new console per process).
+                  Default is background + log file.
+    -Full         Run `pip install -r requirements.txt` before starting,
+                  e.g. after editing requirements.
 
 .EXAMPLE
     .\scripts\restart.ps1
 .EXAMPLE
-    .\scripts\restart.ps1 -Build
+    .\scripts\restart.ps1 -Full
 .EXAMPLE
-    .\scripts\restart.ps1 -Hard
+    .\scripts\restart.ps1 -Foreground
 #>
 [CmdletBinding()]
 param(
-    [switch]$Rolling,
-    [switch]$Full,
-    [switch]$Hard,
-    [switch]$Build
+    [switch]$Foreground,
+    [switch]$Full
 )
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) '_Common.ps1')
 
-$strategy = if ($Hard) { 'hard' } elseif ($Full) { 'full' } else { 'rolling' }
-
-Write-LgBanner "LeaseGenie API -- restart (strategy=$strategy, hybrid)"
-
-if (-not (Test-DockerInstalled)) { Stop-WithError 'Docker is not installed or not in PATH' }
-$null = Get-ComposeCommand
+$mode = if ($Foreground) { 'Foreground' } else { 'Background' }
+Write-LgBanner "LeaseGenie -- restart ($mode mode, native)"
 Test-EnvFile
 Get-LifecycleLock -Action 'restart'
 
 try {
-    $targets = @('api', 'worker')
-    Write-LgInfo "Targets: $($targets -join ', ')"
+    # ---- Stop ----
+    Write-LgBanner 'Stopping current processes'
+    Stop-LgProcess -Name 'worker' -TimeoutSec 60
+    Stop-LgProcess -Name 'api'    -TimeoutSec 20
 
-    if ($Build) {
-        Write-LgBanner 'Rebuilding images'
-        Invoke-Compose build @targets | Out-Null
-        if ($LASTEXITCODE -ne 0) { Stop-WithError 'Build failed' }
-        Write-LgOk "Rebuilt: $($targets -join ', ')"
+    # ---- Optional dependency reinstall ----
+    if ($Full) {
+        Write-LgBanner 'pip install -r requirements.txt'
+        $py = Get-VenvPython
+        & $py -m pip install -r requirements.txt
+        if ($LASTEXITCODE -ne 0) { Stop-WithError 'pip install failed' }
+        Write-LgOk 'Dependencies installed'
     }
 
-    switch ($strategy) {
-        'rolling' {
-            Write-LgBanner 'Rolling restart'
-            foreach ($svc in $targets) {
-                Write-LgInfo "Restarting $svc..."
-                Invoke-Compose restart $svc | Out-Null
-                if ($LASTEXITCODE -ne 0) { Write-LgWarn "$svc restart returned non-zero" }
-            }
-        }
-        'full' {
-            Write-LgBanner 'Full restart'
-            Write-LgInfo 'Stopping target services...'
-            foreach ($svc in $targets) {
-                Stop-ServiceGracefully -Service $svc -TimeoutSec 30
-            }
-            Write-LgInfo 'Starting target services...'
-            Invoke-Compose up -d @targets | Out-Null
-            if ($LASTEXITCODE -ne 0) { Stop-WithError 'Failed to start services' }
-        }
-        'hard' {
-            Write-LgBanner 'Hard restart (container recreation)'
-            Invoke-Compose up -d --force-recreate @targets | Out-Null
-            if ($LASTEXITCODE -ne 0) { Stop-WithError 'Recreate failed' }
-        }
+    if (-not (Test-VenvReady)) {
+        Stop-WithError "Virtual environment not found at .\.venv. Run: python -m venv .venv ; .\.venv\Scripts\Activate.ps1 ; pip install -r requirements.txt"
     }
 
-    Write-LgBanner 'Verifying'
-    $allHealthy = $true
-    foreach ($svc in $targets) {
-        if (-not (Wait-ForServiceHealth -Service $svc -TimeoutSec 60)) {
-            $allHealthy = $false
-        }
-    }
-
-    Write-LgBanner 'Status'
-    Invoke-Compose ps | Out-Null
-
+    # ---- Start ----
+    Write-LgBanner 'Launching api + worker'
+    $py = Get-VenvPython
     $apiPort = Get-EnvValue -Key 'API_PORT' -Default '8000'
-    Write-Host ''
-    Write-LgInfo "Smoke-testing http://localhost:$apiPort/health ..."
-    try {
-        $resp = Invoke-WebRequest -Uri "http://localhost:$apiPort/health" -TimeoutSec 5 -UseBasicParsing
-        if ($resp.StatusCode -eq 200) { Write-LgOk "API responding at http://localhost:$apiPort" }
-    } catch {
-        Write-LgWarn 'API not responding yet (may still be booting)'
-    }
 
-    if ($allHealthy) {
+    $apiArgs = @('-m', 'uvicorn', 'app.main:app', '--host', '0.0.0.0', '--port', $apiPort)
+    Start-LgProcess -Name 'api' -FilePath $py -ArgumentList $apiArgs -Mode $mode | Out-Null
+
+    $workerArgs = @('-m', 'celery', '-A', 'app.workers.celery_app:celery_app', 'worker', '--loglevel=info', '--concurrency=2', '-P', 'solo')
+    Start-LgProcess -Name 'worker' -FilePath $py -ArgumentList $workerArgs -Mode $mode | Out-Null
+
+    # ---- Smoke ----
+    Write-LgBanner 'Smoke test'
+    $healthUrl = "http://localhost:$apiPort/health"
+    if (Wait-ForHttpHealth -Url $healthUrl -TimeoutSec 60) {
         Write-LgBanner 'Restarted'
-        Write-LgOk 'All target services are healthy'
+        Write-LgOk "API healthy at $healthUrl"
     } else {
         Write-LgBanner 'Restarted (with warnings)'
-        Write-LgWarn 'Some services did not pass health checks -- check logs'
+        Write-LgWarn 'API did not pass health check -- inspect .\logs\api.log'
         exit 2
     }
 } finally {

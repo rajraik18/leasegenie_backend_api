@@ -4,9 +4,9 @@ Three-layer toolkit for managing the database schema:
 
 | Layer | File | When to use |
 |---|---|---|
-| Bash wrapper | `scripts/db.sh` | Day-to-day operations from a host shell |
-| Python CLI | `scripts/db/manage.py` | Multi-backend (Postgres + SQLite); used inside the API container |
-| Pure SQL | `scripts/db/schema.sql` | DBA review, direct `psql` execution, cold-start bootstrap |
+| PowerShell wrapper | `scripts\db.ps1` | Day-to-day operations from a Windows shell |
+| Python CLI | `scripts\db\manage.py` | Multi-backend (Postgres + SQLite); invoked by `db.ps1` |
+| Pure SQL | `scripts\db\schema.sql` | DBA review, direct `psql` execution, cold-start bootstrap |
 
 ## Backend support
 
@@ -24,50 +24,49 @@ Two extensions must be installed before `init` runs:
 | Extension | Purpose | Install path |
 |---|---|---|
 | `pgcrypto` | `gen_random_uuid()` for primary keys | Bundled with Postgres ≥ 13 |
-| `vector` (pgvector) | `VECTOR` column type + HNSW index | `apt install postgresql-15-pgvector`, or use `pgvector/pgvector:pg15-or-later` Docker image, or enable the "vector" extension in your managed Postgres provider |
+| `vector` (pgvector) | `VECTOR` column type + HNSW index | Pre-built Windows binaries: https://github.com/pgvector/pgvector-windows/releases. Or, on managed Postgres (RDS / Cloud SQL), enable the "vector" extension via the provider console. |
 
-`manage.py init` runs `CREATE EXTENSION IF NOT EXISTS` for both — your Postgres role just needs CREATEDB-level privileges. On managed Postgres (RDS, Cloud SQL, etc.) you may need to enable the extension via the provider console first, then `manage.py init` will succeed.
+`manage.py init` runs `CREATE EXTENSION IF NOT EXISTS` for both — your Postgres role just needs CREATEDB-level privileges. On managed Postgres you may need to enable the extension via the provider console first, then `manage.py init` will succeed.
 
-## Two paths to initialize
+## Two paths to initialise
 
-```bash
-# Path A: through the API container (preferred — uses ORM, multi-backend)
-scripts/db.sh init
-# This calls: docker compose exec api python -m scripts.db.manage init
+```powershell
+# Path A: through the venv (preferred — uses ORM, multi-backend)
+.\scripts\db.ps1 init
+# This calls: .\.venv\Scripts\python.exe -m scripts.db.manage init
 
-# Path B: direct psql (Postgres only — useful when API can't start yet)
-scripts/db.sh sql
-# This calls: cat scripts/db/schema.sql | docker compose exec postgres psql ...
+# Path B: direct psql (Postgres only — useful when the venv isn't ready yet)
+.\scripts\db.ps1 sql
+# This calls: psql -h <host> -p <port> -U <user> -d <db> -f scripts\db\schema.sql
 ```
 
-Path A is preferred because it uses the same SQLAlchemy version + DATABASE_URL the app does — guaranteed consistency. Path B is the escape hatch for cold start before the API has a database to connect to.
+Path A is preferred because it uses the same SQLAlchemy version + DATABASE_URL the app does — guaranteed consistency. Path B is the escape hatch for a cold-start before Python is set up.
 
 ## Daily operations
 
-```bash
+```powershell
 # Schema lifecycle
-scripts/db.sh init        # create tables + extensions (idempotent)
-scripts/db.sh check       # verify DB matches ORM (no changes)
-scripts/db.sh migrate     # add new ORM tables (forward-only)
-scripts/db.sh status      # row counts + pgvector version
+.\scripts\db.ps1 init        # create tables + extensions (idempotent)
+.\scripts\db.ps1 check       # verify DB matches ORM (no changes)
+.\scripts\db.ps1 migrate     # add new ORM tables (forward-only)
+.\scripts\db.ps1 status      # row counts + pgvector version
 
 # pgvector verification
-scripts/db.sh pgvector    # confirms extension installed + functional + HNSW index
+.\scripts\db.ps1 pgvector    # confirms extension installed + functional + HNSW index
 
 # Demo data
-scripts/db.sh seed
-scripts/db.sh seed --tenant "Acme Corp" --project "Q4 2026"
+.\scripts\db.ps1 seed
+.\scripts\db.ps1 seed --tenant "Acme Corp" --project "Q4 2026"
 
 # Inspection
-scripts/db.sh shell       # opens psql REPL
-scripts/db.sh logs        # tails postgres logs
+.\scripts\db.ps1 shell       # opens psql REPL
 
 # Backups (DEV only — production should use pg_basebackup or managed snapshots)
-scripts/db.sh backup      # pg_dump to ./backups/leasegenie_<timestamp>.sql
+.\scripts\db.ps1 backup      # pg_dump to .\backups\leasegenie_<timestamp>.sql
 
 # Destructive (asks for confirmation)
-scripts/db.sh drop
-scripts/db.sh reset       # drop + init
+.\scripts\db.ps1 drop
+.\scripts\db.ps1 reset       # drop + init
 ```
 
 ## What gets created
@@ -84,7 +83,7 @@ The schema has 9 tables plus a `schema_version` sentinel:
 | `field_overrides` | manual override | One row per (tenant, field) — takes precedence over extraction |
 | `audit_log` | every value change | Append-only, indexed by (tenant, field, time DESC) |
 | `extraction_jobs` | async job | Celery worker tracking — status/progress/error |
-| `clause_embeddings` | one per clause | **Native pgvector — replaces ChromaDB**; HNSW index for cosine search |
+| `clause_embeddings` | one per clause | Native pgvector — HNSW index for cosine search |
 | `schema_version` | one per migration | Used by `manage.py` to detect schema drift |
 
 ### Vector storage detail
@@ -103,10 +102,10 @@ The HNSW index uses `m=16, ef_construction=64`. These defaults work well for ~10
 
 ## CI / regression gates
 
-```bash
+```powershell
 # In CI, after applying schema:
-scripts/db.sh check    # exit 0 if schema matches ORM, exit 1 if drift
-scripts/db.sh pgvector # exit 0 if pgvector functional, exit 2 if not
+.\scripts\db.ps1 check    # exit 0 if schema matches ORM, exit 1 if drift
+.\scripts\db.ps1 pgvector # exit 0 if pgvector functional, exit 2 if not
 ```
 
 Both commands are non-destructive and safe to run on production.
@@ -114,16 +113,16 @@ Both commands are non-destructive and safe to run on production.
 ## What this does NOT do
 
 - **No Alembic-style migrations.** `migrate` only ADDS tables. Column type changes, drops, and data migrations require Alembic. Add Alembic to `requirements.txt` and run `alembic init alembic` if you need that — the existing scripts are designed not to conflict.
-- **No automated backups.** `scripts/db.sh backup` is a one-shot pg_dump to local disk. Production should use pg_basebackup, WAL archiving, or your managed-Postgres provider's snapshot feature.
+- **No automated backups.** `.\scripts\db.ps1 backup` is a one-shot pg_dump to local disk. Production should use pg_basebackup, WAL archiving, or your managed-Postgres provider's snapshot feature.
 - **No replication setup.** Single-instance only. For HA, use Patroni / RDS Multi-AZ / Cloud SQL HA.
 - **No row-level security.** All authorization is enforced at the API layer.
 
 ## Troubleshooting
 
-**"`vector` extension does not exist"** — The pgvector extension isn't installed at the cluster level. Install it (see "Required Postgres extensions"), then re-run `scripts/db.sh init`.
+**"`vector` extension does not exist"** — The pgvector extension isn't installed at the cluster level. Install it (see "Required Postgres extensions"), then re-run `.\scripts\db.ps1 init`.
 
 **"permission denied to create extension"** — Your DB role doesn't have privileges. Either grant them (`ALTER USER leasegenie WITH SUPERUSER` — DEV only) or have a DBA create the extensions once with `CREATE EXTENSION vector;` and your role can then use them.
 
-**`scripts/db.sh init` fails with "neither api nor postgres is running"** — You haven't started the stack yet. Run `scripts/start.sh --infra` first to bring up just postgres + redis + ollama, then `scripts/db.sh init` to create the schema, then `scripts/start.sh` to start the API.
+**`.\scripts\db.ps1 init` fails with "Host Postgres not reachable"** — Postgres isn't running on the configured host:port. Start the Windows Postgres service (`Get-Service -Name "postgresql*" | Start-Service`) and re-run.
 
-**HNSW index build is slow on large datasets** — Expected. For >100K clauses, the index can take several minutes. To check progress: `scripts/db.sh shell` then `SELECT * FROM pg_stat_progress_create_index;`.
+**HNSW index build is slow on large datasets** — Expected. For >100K clauses, the index can take several minutes. To check progress: `.\scripts\db.ps1 shell` then `SELECT * FROM pg_stat_progress_create_index;`.

@@ -1,3 +1,61 @@
+## v3.0.0 - Docker removed, Windows-native deployment
+
+User feedback: the v2.2 hybrid mode kept Docker in the loop just to run two Python processes, and that proved to be more friction than value on Windows hosts. v3.0 drops Docker entirely. The API and Celery worker now run as plain Windows processes (or, in production, as Windows Services). Postgres + pgvector, Redis, and Ollama remain as host-installed services exactly as in v2.2 — they were already on the host before; this release just removes the container layer above them.
+
+### Removed
+
+- `Dockerfile`, `docker-compose.yml`, `.dockerignore`.
+- All bash lifecycle scripts (`scripts/_common.sh`, `scripts/start.sh`, `scripts/stop.sh`, `scripts/restart.sh`, `scripts/status.sh`, `scripts/logs.sh`, `scripts/daily_run.sh`, `scripts/db.sh`).
+- `scripts/status.ps1`, `scripts/logs.ps1`, `scripts/daily_run.ps1` — superseded by `Get-Service` / `Get-Content -Tail -Wait`.
+- `host.docker.internal` references everywhere — `.env.example`, `app/config.py` default, `app/db/session.py` comment.
+
+### Added
+
+- `deploy/windows/install-services.ps1` — registers `leasegenie-api` and `leasegenie-worker` as Windows Services. NSSM-backed by default (with `-FetchNSSM` to download), with `-UseSC` fallback for environments that forbid third-party binaries. Auto-start on boot, auto-restart 5 s after a crash. Reads env from `.env`.
+- `deploy/windows/uninstall-services.ps1` — symmetrical removal.
+- `deploy/windows/README.md` — one-page install / verify / uninstall walkthrough.
+- `CORS_ALLOW_ORIGINS=` in `.env.example` so the new setting (added in v2.2.x) has an explicit place to live.
+
+### Changed
+
+- `scripts/_Common.ps1` — replaced compose helpers (`Test-DockerInstalled`, `Get-ComposeCommand`, `Wait-ForServiceHealth`, `Confirm-OllamaModels`, `Stop-ServiceGracefully`) with native-process primitives: `Start-LgProcess` (background or foreground), `Stop-LgProcess` (graceful close + force fallback), `Test-LgProcessAlive`, `Test-PortListening`, `Wait-ForHttpHealth`, `Get-VenvPython`. The lifecycle lock and logging helpers are unchanged.
+- `scripts/start.ps1` — runs `python -m uvicorn app.main:app …` and `python -m celery -A app.workers.celery_app:celery_app worker …` from `.\.venv`. Default mode writes PID files to `.\run\` and stdout/stderr to `.\logs\`. New `-Foreground` switch opens a separate console window per process for live debugging. `-Build` reinstalls requirements before starting.
+- `scripts/restart.ps1` — `stop_bg` + `start_bg`. `-Full` reinstalls requirements; `-Foreground` mirrors `start.ps1`.
+- `scripts/stop.ps1` — sends graceful close to worker (60 s grace) then API (20 s grace), falls back to `Stop-Process -Force`. `-Purge` wipes `.\run\` and `.\logs\`. `-Force` collapses both grace windows to 5 s.
+- `scripts/db.ps1` — drops the `docker compose exec api python -m scripts.db.manage` fallback. ORM operations now run via `.\.venv\Scripts\python.exe -m scripts.db.manage` directly. Hard-fails if `DATABASE_URL` can't be parsed (no more `leasegenie:leasegenie` defaults).
+- `.env.example` — every `host.docker.internal` swapped for `localhost`. Container-specific guidance (Docker bridge IPs, `OLLAMA_HOST=0.0.0.0`) removed. `DEBUG` default flipped to `false`.
+- `.gitignore` — added `run/`, `logs/`, `exports/`, `backups/`, `.lifecycle.lock`, `deploy/windows/bin/`.
+- `app/config.py` — `database_url` default host fragment changed from `postgres` to `localhost` (creds are still `CHANGE_ME` placeholders).
+- `app/db/session.py` — comment block updated to reference `scripts\db.ps1 init` instead of `docker-compose`.
+- `README.md`, `DEPLOYMENT.md`, `scripts/README.md`, `scripts/db/README.md` — rewritten for native deployment.
+
+### Migration from v2.2.x
+
+```powershell
+# stop and remove containers (data lives in host Postgres — nothing to migrate)
+docker compose down -v
+
+# create the venv and install
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+# .env was already pointing at host services; just remove host.docker.internal
+(Get-Content .env) -replace 'host\.docker\.internal','localhost' | Set-Content .env
+
+# start
+.\scripts\start.ps1
+```
+
+For production, register as Windows Services after the first successful manual start:
+
+```powershell
+# elevated PowerShell
+.\deploy\windows\install-services.ps1 -FetchNSSM
+```
+
+---
+
 ## v2.2.0 - HYBRID deployment mode
 
 User feedback: existing host installs of Postgres/Redis/Ollama (or corporate constraints) make the all-Docker default friction-prone on Windows. v2.2 makes the canonical deployment a hybrid: only application code (api + worker) runs in Docker; infrastructure runs natively on the host.

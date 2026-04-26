@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     # Database — Postgres + pgvector primary, SQLite fallback for dev.
     # The default uses CHANGE_ME placeholders so a misconfigured deploy
     # fails loudly instead of silently running with predictable creds.
-    database_url: str = "postgresql+psycopg2://CHANGE_ME:CHANGE_ME@postgres:5432/leasegenie"
+    database_url: str = "postgresql+psycopg2://CHANGE_ME:CHANGE_ME@localhost:5432/leasegenie"
 
     # Celery
     celery_broker_url: str = "memory://"

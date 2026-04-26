@@ -1,24 +1,32 @@
-﻿# scripts/_Common.ps1
+# scripts/_Common.ps1
 # Shared helpers for the .ps1 lifecycle scripts. Dot-source, don't execute.
-# Mirrors scripts/_common.sh as closely as PowerShell allows.
+#
+# This module manages two native processes — the API (uvicorn) and the Celery
+# worker — as plain Windows processes. There is no Docker dependency.
+#
+# Two run modes:
+#   Background (default) — Start-Process -WindowStyle Hidden, stdout/stderr
+#                          redirected to .\logs\<name>.log, PID stored in
+#                          .\run\<name>.pid.
+#   Foreground           — Start-Process powershell -NoExit -Command "..."
+#                          opens a new console per process so live output is
+#                          visible. PID still recorded so Stop-LgProcess works.
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 # ---------------------------------------------------------------------------
-# Pre-initialize every script-scoped variable.
-# `Set-StrictMode -Version Latest` errors on reads of uninitialized variables,
+# Pre-initialise every script-scoped variable.
+# `Set-StrictMode -Version Latest` errors on reads of uninitialised variables,
 # so all script-scoped state must be created here before any function runs.
 # ---------------------------------------------------------------------------
-$Script:ScriptDir     = Split-Path -Parent $MyInvocation.MyCommand.Path
-$Script:ProjectRoot   = (Resolve-Path (Join-Path $Script:ScriptDir '..')).Path
-$Script:LockFile      = Join-Path $Script:ProjectRoot '.lifecycle.lock'
-$Script:ComposeCmd    = $null   # populated lazily by Get-ComposeCommand
-# HYBRID deployment: only api+worker run in Docker. The infrastructure
-# (postgres, redis, ollama) runs natively on the host machine.
-$Script:AllServices   = @('api', 'worker')
-$Script:InfraServices = @()
-$Script:AppServices   = @('api', 'worker')
+$Script:ScriptDir   = Split-Path -Parent $MyInvocation.MyCommand.Path
+$Script:ProjectRoot = (Resolve-Path (Join-Path $Script:ScriptDir '..')).Path
+$Script:LockFile    = Join-Path $Script:ProjectRoot '.lifecycle.lock'
+$Script:RunDir      = Join-Path $Script:ProjectRoot 'run'
+$Script:LogDir      = Join-Path $Script:ProjectRoot 'logs'
+$Script:VenvDir     = Join-Path $Script:ProjectRoot '.venv'
+$Script:AllServices = @('api', 'worker')
 
 Set-Location $Script:ProjectRoot
 
@@ -59,65 +67,6 @@ function Stop-WithError {
 }
 
 # ---------------------------------------------------------------------------
-# Required tooling
-# ---------------------------------------------------------------------------
-function Test-DockerInstalled {
-    try {
-        $null = & docker --version 2>$null
-        return $LASTEXITCODE -eq 0
-    } catch {
-        return $false
-    }
-}
-
-function Get-ComposeCommand {
-    # Returns either @('docker', 'compose') (v2) or @('docker-compose') (v1).
-    # Result is cached in $Script:ComposeCmd for the rest of the session.
-    if ($null -ne $Script:ComposeCmd) {
-        return $Script:ComposeCmd
-    }
-
-    # Try Docker Compose v2 first (preferred)
-    $null = & docker compose version 2>$null
-    if ($LASTEXITCODE -eq 0) {
-        $Script:ComposeCmd = @('docker', 'compose')
-        return $Script:ComposeCmd
-    }
-
-    # Fall back to standalone docker-compose v1
-    $legacy = Get-Command docker-compose -ErrorAction SilentlyContinue
-    if ($null -ne $legacy) {
-        $Script:ComposeCmd = @('docker-compose')
-        return $Script:ComposeCmd
-    }
-
-    Stop-WithError "Neither 'docker compose' nor 'docker-compose' is installed"
-}
-
-function Invoke-Compose {
-    # Wrapper that runs `docker compose ARGS...` (or `docker-compose ARGS...`)
-    # and returns the exit code. Output goes through to the console.
-    $cmd = Get-ComposeCommand
-    if ($cmd.Length -eq 1) {
-        & $cmd[0] @args
-    } else {
-        & $cmd[0] $cmd[1] @args
-    }
-    return $LASTEXITCODE
-}
-
-function Invoke-ComposeQuiet {
-    # Same as Invoke-Compose but captures output as a single string.
-    $cmd = Get-ComposeCommand
-    if ($cmd.Length -eq 1) {
-        $output = & $cmd[0] @args 2>&1 | Out-String
-    } else {
-        $output = & $cmd[0] $cmd[1] @args 2>&1 | Out-String
-    }
-    return $output
-}
-
-# ---------------------------------------------------------------------------
 # .env handling
 # ---------------------------------------------------------------------------
 function Test-EnvFile {
@@ -151,130 +100,199 @@ function Get-EnvValue {
 }
 
 # ---------------------------------------------------------------------------
-# Health checks
+# Virtual environment
 # ---------------------------------------------------------------------------
-function Wait-ForServiceHealth {
-    param(
-        [string]$Service,
-        [int]$TimeoutSec = 120
-    )
-    $elapsed = 0
-    $interval = 3
-
-    Write-LgInfo "Waiting for $Service to become healthy (timeout ${TimeoutSec}s)..."
-    while ($elapsed -lt $TimeoutSec) {
-        $cmd = Get-ComposeCommand
-        if ($cmd.Length -eq 1) {
-            $json = & $cmd[0] ps --format json $Service 2>$null
-        } else {
-            $json = & $cmd[0] $cmd[1] ps --format json $Service 2>$null
-        }
-
-        if ($LASTEXITCODE -eq 0 -and $json) {
-            $lines = $json -split "`n" | Where-Object { $_ -match '\S' }
-            foreach ($line in $lines) {
-                try {
-                    $d = $line | ConvertFrom-Json -ErrorAction Stop
-                    $status = 'unknown'
-                    if ($null -ne $d.PSObject.Properties['Health'] -and $d.Health) {
-                        $status = $d.Health
-                    } elseif ($null -ne $d.PSObject.Properties['State'] -and $d.State) {
-                        $status = $d.State
-                    }
-                    switch ($status) {
-                        'healthy' {
-                            Write-LgOk "$Service is healthy"
-                            return $true
-                        }
-                        'running' {
-                            Write-LgOk "$Service is running (no healthcheck declared)"
-                            return $true
-                        }
-                        'unhealthy' {
-                            Write-LgErr "$Service reports UNHEALTHY"
-                            Invoke-Compose logs --tail=30 $Service | Out-Null
-                            return $false
-                        }
-                    }
-                    break
-                } catch {
-                    # Ignore parse errors and keep polling
-                }
-            }
-        }
-        Start-Sleep -Seconds $interval
-        $elapsed += $interval
+function Get-VenvPython {
+    # Returns the absolute path to the venv's python.exe, or stops if missing.
+    $py = Join-Path $Script:VenvDir 'Scripts\python.exe'
+    if (-not (Test-Path $py)) {
+        Stop-WithError "Virtual environment not found at $($Script:VenvDir). Run: python -m venv .venv ; .\.venv\Scripts\Activate.ps1 ; pip install -r requirements.txt"
     }
+    return $py
+}
 
-    Write-LgErr "$Service did not become healthy within ${TimeoutSec}s"
-    Invoke-Compose logs --tail=30 $Service | Out-Null
-    return $false
+function Test-VenvReady {
+    return (Test-Path (Join-Path $Script:VenvDir 'Scripts\python.exe'))
 }
 
 # ---------------------------------------------------------------------------
-# Ollama model warm-up
+# TCP / process probes
 # ---------------------------------------------------------------------------
-function Confirm-OllamaModels {
+function Test-PortListening {
     param(
-        [string]$LlmModel = 'qwen2.5:32b',
-        [string]$EmbedModel = 'nomic-embed-text'
+        [string]$HostName = 'localhost',
+        [Parameter(Mandatory)] [int]$Port,
+        [int]$TimeoutMs = 1500
     )
-
-    Write-LgInfo "Checking Ollama models..."
-    $cmd = Get-ComposeCommand
-    if ($cmd.Length -eq 1) {
-        $existing = & $cmd[0] exec -T ollama ollama list 2>$null
-    } else {
-        $existing = & $cmd[0] $cmd[1] exec -T ollama ollama list 2>$null
+    try {
+        $tcp = New-Object System.Net.Sockets.TcpClient
+        $tcp.ConnectAsync($HostName, $Port).Wait($TimeoutMs) | Out-Null
+        $ok = $tcp.Connected
+        $tcp.Close()
+        return $ok
+    } catch {
+        return $false
     }
-    if (-not $existing) { $existing = '' }
+}
 
-    $llmKey = ($LlmModel -split ':')[0]
-    if ($existing -match "(?m)^$llmKey") {
-        Write-LgOk "Model $LlmModel already pulled"
-    } else {
-        Write-LgWarn "Model $LlmModel not present - pulling (~20GB, may take 10-30 minutes)"
-        if ($cmd.Length -eq 1) {
-            & $cmd[0] exec -T ollama ollama pull $LlmModel
-        } else {
-            & $cmd[0] $cmd[1] exec -T ollama ollama pull $LlmModel
-        }
-        if ($LASTEXITCODE -ne 0) {
-            Write-LgErr "Ollama pull failed for $LlmModel"
-            return $false
-        }
-        Write-LgOk "Pulled $LlmModel"
-    }
+function Get-LgPidFile {
+    param([Parameter(Mandatory)] [string]$Name)
+    return Join-Path $Script:RunDir "$Name.pid"
+}
 
-    $embedKey = ($EmbedModel -split ':')[0]
-    if ($existing -match "(?m)^$embedKey") {
-        Write-LgOk "Embed model $EmbedModel already pulled"
-    } else {
-        Write-LgWarn "Pulling embedding model $EmbedModel (~270MB)..."
-        if ($cmd.Length -eq 1) {
-            & $cmd[0] exec -T ollama ollama pull $EmbedModel
-        } else {
-            & $cmd[0] $cmd[1] exec -T ollama ollama pull $EmbedModel
-        }
-        if ($LASTEXITCODE -ne 0) {
-            Write-LgErr "Ollama pull failed for $EmbedModel"
-            return $false
-        }
-        Write-LgOk "Pulled $EmbedModel"
-    }
-    return $true
+function Get-LgLogFile {
+    param([Parameter(Mandatory)] [string]$Name)
+    return Join-Path $Script:LogDir "$Name.log"
+}
+
+function Test-LgProcessAlive {
+    param([Parameter(Mandatory)] [string]$Name)
+    $pidFile = Get-LgPidFile -Name $Name
+    if (-not (Test-Path $pidFile)) { return $false }
+    $procPidStr = Get-Content $pidFile -ErrorAction SilentlyContinue
+    if (-not $procPidStr) { return $false }
+    $procPid = 0
+    if (-not [int]::TryParse($procPidStr, [ref]$procPid)) { return $false }
+    if ($procPid -le 0) { return $false }
+    $proc = Get-Process -Id $procPid -ErrorAction SilentlyContinue
+    return ($null -ne $proc)
 }
 
 # ---------------------------------------------------------------------------
-# Stop helpers
+# Process management — Start / Stop a managed background or foreground proc.
 # ---------------------------------------------------------------------------
-function Stop-ServiceGracefully {
+function Start-LgProcess {
+    [CmdletBinding()]
     param(
-        [string]$Service,
+        [Parameter(Mandatory)] [string]$Name,
+        [Parameter(Mandatory)] [string]$FilePath,
+        [string[]]$ArgumentList = @(),
+        [ValidateSet('Background', 'Foreground')] [string]$Mode = 'Background',
+        [string]$WindowTitle = ''
+    )
+
+    if (Test-LgProcessAlive -Name $Name) {
+        $existingPid = Get-Content (Get-LgPidFile -Name $Name)
+        Stop-WithError "$Name already running (PID $existingPid). Run stop.ps1 first."
+    }
+
+    $null = New-Item -ItemType Directory -Force -Path $Script:RunDir, $Script:LogDir
+    $pidFile = Get-LgPidFile -Name $Name
+    $logFile = Get-LgLogFile -Name $Name
+
+    if ($Mode -eq 'Background') {
+        # Write a stamped header so log restarts are obvious.
+        $header = "`n=== $Name started $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') ==="
+        Add-Content -Path $logFile -Value $header
+        $proc = Start-Process -FilePath $FilePath `
+            -ArgumentList $ArgumentList `
+            -WorkingDirectory $Script:ProjectRoot `
+            -RedirectStandardOutput $logFile `
+            -RedirectStandardError $logFile `
+            -WindowStyle Hidden `
+            -PassThru
+    } else {
+        # Foreground: open a new console so the operator sees live output.
+        # We launch powershell.exe with -NoExit and run the target inline.
+        # Recording the PID of the spawned powershell.exe is sufficient — when
+        # we Stop-Process it, the child target dies with it.
+        if (-not $WindowTitle) { $WindowTitle = "leasegenie-$Name" }
+        $quotedArgs = ($ArgumentList | ForEach-Object {
+            if ($_ -match '\s|"') { '"' + ($_ -replace '"', '\"') + '"' } else { $_ }
+        }) -join ' '
+        $cmd = "`$Host.UI.RawUI.WindowTitle = '$WindowTitle'; & `"$FilePath`" $quotedArgs"
+        $proc = Start-Process -FilePath 'powershell.exe' `
+            -ArgumentList @('-NoLogo', '-NoExit', '-Command', $cmd) `
+            -WorkingDirectory $Script:ProjectRoot `
+            -PassThru
+    }
+
+    Set-Content -Path $pidFile -Value $proc.Id -Encoding ASCII
+    if ($Mode -eq 'Background') {
+        Write-LgOk "Started $Name (PID $($proc.Id), background) -- logs: $logFile"
+    } else {
+        Write-LgOk "Started $Name (PID $($proc.Id), foreground -- new console window)"
+    }
+    return $proc.Id
+}
+
+function Stop-LgProcess {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)] [string]$Name,
         [int]$TimeoutSec = 30
     )
-    Write-LgInfo "Stopping $Service gracefully (SIGTERM, ${TimeoutSec}s grace)..."
-    Invoke-Compose stop -t $TimeoutSec $Service | Out-Null
+
+    $pidFile = Get-LgPidFile -Name $Name
+    if (-not (Test-Path $pidFile)) {
+        Write-LgWarn "$Name has no PID file - nothing to stop"
+        return
+    }
+
+    $procPidStr = Get-Content $pidFile -ErrorAction SilentlyContinue
+    $procPid = 0
+    if (-not $procPidStr -or -not [int]::TryParse($procPidStr, [ref]$procPid) -or $procPid -le 0) {
+        Write-LgWarn "$Name PID file is unreadable - removing"
+        Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
+        return
+    }
+
+    $proc = Get-Process -Id $procPid -ErrorAction SilentlyContinue
+    if ($null -eq $proc) {
+        Write-LgWarn "$Name (PID $procPid) is already gone - cleaning up PID file"
+        Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
+        return
+    }
+
+    Write-LgInfo "Stopping $Name (PID $procPid, grace ${TimeoutSec}s)..."
+    try {
+        # Polite close — does NOT throw if process has no main window.
+        $null = $proc.CloseMainWindow()
+    } catch {}
+
+    $deadline = (Get-Date).AddSeconds($TimeoutSec)
+    while ((Get-Date) -lt $deadline) {
+        if ($proc.HasExited) { break }
+        Start-Sleep -Milliseconds 500
+        $proc.Refresh()
+    }
+
+    if (-not $proc.HasExited) {
+        Write-LgWarn "$Name did not exit gracefully -- forcing"
+        try {
+            Stop-Process -Id $procPid -Force -ErrorAction Stop
+        } catch {
+            Write-LgWarn "Stop-Process -Force failed: $_"
+        }
+    }
+
+    Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
+    Write-LgOk "Stopped $Name"
+}
+
+# ---------------------------------------------------------------------------
+# Health checks
+# ---------------------------------------------------------------------------
+function Wait-ForHttpHealth {
+    param(
+        [Parameter(Mandatory)] [string]$Url,
+        [int]$TimeoutSec = 60,
+        [int]$IntervalMs = 1000
+    )
+    Write-LgInfo "Waiting for $Url (timeout ${TimeoutSec}s)..."
+    $deadline = (Get-Date).AddSeconds($TimeoutSec)
+    while ((Get-Date) -lt $deadline) {
+        try {
+            $resp = Invoke-WebRequest -Uri $Url -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop
+            if ($resp.StatusCode -eq 200) {
+                Write-LgOk "$Url responded 200"
+                return $true
+            }
+        } catch {}
+        Start-Sleep -Milliseconds $IntervalMs
+    }
+    Write-LgErr "$Url did not respond 200 within ${TimeoutSec}s"
+    return $false
 }
 
 # ---------------------------------------------------------------------------

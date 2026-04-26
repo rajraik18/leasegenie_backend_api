@@ -6,13 +6,12 @@
 -- to bring them up to the v2.0.0 schema. Idempotent — safe to re-run.
 --
 -- Apply via:
---   scripts/db.sh sql                      (auto-detects this file)
+--   .\scripts\db.ps1 upgrade-sql           (runs every .sql in this dir in order)
 --   OR
---   psql -f scripts/db/migrations/v2_0_0_upgrade.sql
+--   psql -f scripts\db\migrations\v2_0_0_upgrade.sql
 --
--- For fresh installs, scripts/db/schema.sql is canonical and you do NOT
--- need this file. The Compose container runs schema.sql automatically on
--- first boot from /docker-entrypoint-initdb.d/.
+-- For fresh installs, scripts\db\schema.sql is canonical and you do NOT
+-- need this file — `.\scripts\db.ps1 init` applies the full schema.
 --
 -- This migration:
 --   1. Ensures both extensions (pgcrypto, vector) are installed

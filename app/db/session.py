@@ -77,12 +77,12 @@ def get_db() -> Session:
 def init_db() -> None:
     """Create tables. Called on application startup.
 
-    Postgres production path: tables are created by docker-compose's mounted
-    schema.sql on first boot, OR by `scripts/db.sh init` for managed Postgres.
-    This `init_db()` is a fallback that runs `Base.metadata.create_all` —
-    it's idempotent and does NOT install the pgvector extension or create
-    the HNSW index on `clause_embeddings.embedding`. For full setup use
-    `scripts/db.sh init` which calls `scripts/db/manage.py init`.
+    Postgres production path: tables are created by `scripts\\db.ps1 init`
+    (which runs `scripts/db/schema.sql` via host `psql`). This `init_db()`
+    is a fallback that runs `Base.metadata.create_all` — it's idempotent
+    and does NOT install the pgvector extension or create the HNSW index
+    on `clause_embeddings.embedding`. For full setup use
+    `scripts\\db.ps1 init` which calls `scripts/db/manage.py init`.
     """
     from app.models import orm  # noqa: F401
     Base.metadata.create_all(bind=engine)
