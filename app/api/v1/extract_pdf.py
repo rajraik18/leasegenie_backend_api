@@ -295,11 +295,21 @@ def extract_pdf(
     db.commit()
     db.refresh(job)
 
-    extract_tenant_task.delay(
-        tenant_id=tenant.id,
-        job_id=job.id,
-        schema_id=resolved_schema_id,
-    )
+    try:
+        extract_tenant_task.delay(
+            tenant_id=tenant.id,
+            job_id=job.id,
+            schema_id=resolved_schema_id,
+        )
+    except Exception as exc:
+        logger.exception("extract task dispatch failed for job %s", job.id)
+        job.status = "failed"
+        job.error = f"could not enqueue extraction task: {exc}"[:4000]
+        db.commit()
+        raise HTTPException(
+            status_code=503,
+            detail="extraction queue unavailable — try again shortly",
+        )
     db.refresh(job)
 
     return JobOut.model_validate(job)

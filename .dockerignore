@@ -1,0 +1,45 @@
+.git/
+.gitignore
+.github/
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+
+# Python build artefacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+dist/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+
+# Local runtime data (data/ itself is shipped — BRD + playbook sources)
+uploads/
+exports/
+*.sqlite
+*.sqlite3
+*.db
+
+# Docs / OS junk
+*.md
+!README.md
+.DS_Store
+Thumbs.db

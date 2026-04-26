@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -82,18 +83,59 @@ def upload_document(
     with dest.open("wb") as fh:
         shutil.copyfileobj(file.file, fh)
 
-    doc = Document(
-        tenant_id=tenant_id,
-        filename=filename,
-        storage_path=str(dest),
-        document_type=document_type,
-        document_order=document_order,
-        effective_date=eff,
-        ocr_status="pending",
-    )
-    db.add(doc)
-    db.commit()
-    db.refresh(doc)
+    # Retry on (tenant_id, document_order) collisions caused by concurrent
+    # uploads. The unique constraint uq_tenant_doc_order in
+    # app/models/orm.py guarantees only one writer wins per slot; the
+    # losers recompute the next free order.
+    last_exc: IntegrityError | None = None
+    for _ in range(MAX_AMENDMENTS + 1):
+        doc = Document(
+            tenant_id=tenant_id,
+            filename=filename,
+            storage_path=str(dest),
+            document_type=document_type,
+            document_order=document_order,
+            effective_date=eff,
+            ocr_status="pending",
+        )
+        db.add(doc)
+        try:
+            db.commit()
+            db.refresh(doc)
+            break
+        except IntegrityError as exc:
+            db.rollback()
+            last_exc = exc
+            if document_type == "base_lease":
+                # Slot 0 is taken — surface the same 409 the upfront check raises.
+                raise HTTPException(
+                    status_code=409,
+                    detail="base lease already uploaded — delete it first",
+                )
+            db.refresh(tenant)
+            amendment_count = sum(1 for d in tenant.documents if d.document_type == "amendment")
+            if amendment_count >= MAX_AMENDMENTS:
+                try:
+                    dest.unlink(missing_ok=True)
+                except OSError:
+                    pass
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"maximum {MAX_AMENDMENTS} amendments reached",
+                )
+            document_order = amendment_count + 1
+            new_dest = dest_dir / f"{document_order:02d}_{safe_name}"
+            try:
+                dest.rename(new_dest)
+            except OSError as ren_exc:
+                logger.warning("could not rename %s -> %s: %s", dest, new_dest, ren_exc)
+            dest = new_dest
+    else:
+        logger.exception("document_order collision could not be resolved")
+        raise HTTPException(
+            status_code=409,
+            detail="could not assign a document slot — please retry",
+        ) from last_exc
 
     # Fire off background OCR + vector-indexing so the document is ready
     # when extraction runs. Non-blocking — upload returns immediately.

@@ -5,7 +5,7 @@ tenant — each in-scope field × (base lease | amendments) + override +
 concluded value. Also exposes override PATCH, audit log, and LeaseLens
 red flags.
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -85,12 +85,19 @@ def set_override(
 
 
 @router.get("/{tenant_id}/audit", response_model=list[AuditLogOut])
-def get_audit(tenant_id: str, db: Session = Depends(get_db)) -> list[AuditLogOut]:
+def get_audit(
+    tenant_id: str,
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+) -> list[AuditLogOut]:
     """Audit trail — BRD rule: keep original + last 2 edits visible."""
     rows = (
         db.query(AuditLog)
         .filter(AuditLog.tenant_id == tenant_id)
         .order_by(AuditLog.timestamp.desc())
+        .limit(limit)
+        .offset(offset)
         .all()
     )
     return [AuditLogOut.model_validate(r) for r in rows]

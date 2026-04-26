@@ -35,7 +35,7 @@ def extract_tenant_task(
         job = db.get(ExtractionJob, job_id)
         if job:
             job.status = "failed"
-            job.error = str(exc)
+            job.error = str(exc)[:4000]
             job.finished_at = datetime.now(timezone.utc)
             db.commit()
         raise

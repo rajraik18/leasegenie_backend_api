@@ -18,11 +18,14 @@ router = APIRouter(prefix="/fields", tags=["fields"])
 def list_fields(
     abstract_type: AbstractType | None = Query(None),
     property_type: PropertyType | None = Query(None),
+    limit: int = Query(200, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
 ) -> list[FieldConfigOut]:
     """List all 72 fields (or just those in scope for abstract×property)."""
     ref = get_reference_data()
     fields = ref.list_fields(abstract_type=abstract_type, property_type=property_type)
-    return [_to_config_out(fc) for fc in fields]
+    page = fields[offset : offset + limit]
+    return [_to_config_out(fc) for fc in page]
 
 
 @router.get("/{field_id}", response_model=FieldDetailOut)
