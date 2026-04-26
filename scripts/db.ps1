@@ -1,11 +1,11 @@
-﻿<#
+<#
 .SYNOPSIS
-    Database management wrapper (HYBRID deployment).
+    Database management wrapper (native deployment).
 
 .DESCRIPTION
-    Postgres runs on the HOST machine. This script wraps psql on the host
-    (preferred) or runs through the api container (fallback) for ORM-aware
-    operations.
+    Postgres runs on the HOST machine. This script wraps psql / pg_dump on
+    the host for SQL operations, and the project's venv `python -m
+    scripts.db.manage` for ORM-aware operations.
 
 .PARAMETER Command
     Subcommand:
@@ -44,17 +44,15 @@ if (-not $Command -or $Command -in @('-h', '--help', 'help')) {
     exit 0
 }
 
-if (-not (Test-DockerInstalled)) {
-    Stop-WithError 'Docker is not installed or not in PATH'
-}
-$null = Get-ComposeCommand
-
 # ---- Read host Postgres connection details from .env ----
-$dbUrl = Get-EnvValue -Key 'DATABASE_URL' -Default 'postgresql+psycopg2://leasegenie:leasegenie@localhost:5432/leasegenie'
+$dbUrl = Get-EnvValue -Key 'DATABASE_URL'
+if (-not $dbUrl) {
+    Stop-WithError "DATABASE_URL not found in .env. Copy .env.example to .env and fill in real values."
+}
 
 # Parse postgresql+psycopg2://USER:PASS@HOST:PORT/DB
-$pgUser = 'leasegenie'
-$pgPass = 'leasegenie'
+$pgUser = ''
+$pgPass = ''
 $pgHost = 'localhost'
 $pgPort = 5432
 $pgDb   = 'leasegenie'
@@ -65,26 +63,16 @@ if ($dbUrl -match '://([^:]+):([^@]+)@([^:/]+):(\d+)/([^?]+)') {
     $pgHost = $matches[3]
     $pgPort = [int]$matches[4]
     $pgDb   = $matches[5]
-    if ($pgHost -eq 'host.docker.internal') { $pgHost = 'localhost' }
+}
+
+if (-not $pgUser -or -not $pgPass) {
+    Stop-WithError "Could not parse user / password from DATABASE_URL. Check .env."
 }
 
 # ---- Helpers ----
 
-function Test-ApiRunning {
-    $output = Invoke-ComposeQuiet ps api
-    return ($output -match 'running|healthy|Up')
-}
-
 function Test-PostgresReachable {
-    try {
-        $tcp = New-Object System.Net.Sockets.TcpClient
-        $tcp.ConnectAsync($pgHost, $pgPort).Wait(3000) | Out-Null
-        $ok = $tcp.Connected
-        $tcp.Close()
-        return $ok
-    } catch {
-        return $false
-    }
+    return Test-PortListening -HostName $pgHost -Port $pgPort
 }
 
 function Test-PsqlInstalled {
@@ -101,10 +89,10 @@ function Invoke-Psql {
     }
     $env:PGPASSWORD = $pgPass
     try {
-        $args = @('-h', $pgHost, '-p', $pgPort, '-U', $pgUser, '-d', $pgDb, '-v', 'ON_ERROR_STOP=1')
-        if ($SqlFile) { $args += @('-f', $SqlFile) }
-        if ($ExtraPsqlArgs) { $args += $ExtraPsqlArgs }
-        & psql @args
+        $psqlArgs = @('-h', $pgHost, '-p', $pgPort, '-U', $pgUser, '-d', $pgDb, '-v', 'ON_ERROR_STOP=1')
+        if ($SqlFile) { $psqlArgs += @('-f', $SqlFile) }
+        if ($ExtraPsqlArgs) { $psqlArgs += $ExtraPsqlArgs }
+        & psql @psqlArgs
     } finally {
         Remove-Item Env:\PGPASSWORD -ErrorAction SilentlyContinue
     }
@@ -112,11 +100,9 @@ function Invoke-Psql {
 
 function Invoke-ManagePy {
     param([string[]]$ManageArgs)
-    if (-not (Test-ApiRunning)) {
-        Stop-WithError "API container is not running. Start it: .\scripts\start.ps1"
-    }
-    Write-LgInfo "Running via api container: python -m scripts.db.manage $($ManageArgs -join ' ')"
-    Invoke-Compose exec -T api python -m scripts.db.manage @ManageArgs
+    $py = Get-VenvPython
+    Write-LgInfo "Running: python -m scripts.db.manage $($ManageArgs -join ' ')"
+    & $py -m scripts.db.manage @ManageArgs
 }
 
 # ---- Subcommand dispatch ----
@@ -124,16 +110,10 @@ function Invoke-ManagePy {
 switch ($Command.ToLower()) {
 
     { $_ -in 'init', 'migrate', 'upgrade' } {
-        if (Test-ApiRunning) {
-            Invoke-ManagePy -ManageArgs @($Command)
-        } elseif (Test-PostgresReachable) {
-            Write-LgWarn "API container not running -- falling back to direct psql for $Command"
-            Write-LgInfo "Loading scripts/db/schema.sql..."
-            Invoke-Psql -SqlFile 'scripts\db\schema.sql'
-            if ($LASTEXITCODE -eq 0) { Write-LgOk 'Schema loaded via psql' }
-        } else {
-            Stop-WithError "Neither api container nor host Postgres is reachable"
+        if (-not (Test-PostgresReachable)) {
+            Stop-WithError "Host Postgres not reachable at ${pgHost}:${pgPort}"
         }
+        Invoke-ManagePy -ManageArgs @($Command)
     }
 
     { $_ -in 'drop', 'reset' } {
@@ -142,20 +122,18 @@ switch ($Command.ToLower()) {
         Write-LgWarn '============================================================='
         $confirm = Read-Host "Type 'YES I AM SURE' to proceed"
         if ($confirm -ne 'YES I AM SURE') { Stop-WithError 'Aborted by user' }
-        if (Test-ApiRunning) {
-            Invoke-ManagePy -ManageArgs @($Command, '--yes')
-        } else {
-            Stop-WithError "API container must be running for $Command (uses ORM)"
+        if (-not (Test-PostgresReachable)) {
+            Stop-WithError "Host Postgres not reachable at ${pgHost}:${pgPort}"
         }
+        Invoke-ManagePy -ManageArgs @($Command, '--yes')
     }
 
     { $_ -in 'check', 'status', 'pgvector', 'seed' } {
-        if (Test-ApiRunning) {
-            $allArgs = @($Command) + $ExtraArgs
-            Invoke-ManagePy -ManageArgs $allArgs
-        } else {
-            Stop-WithError "API container must be running for '$Command'. Start it: .\scripts\start.ps1"
+        if (-not (Test-PostgresReachable)) {
+            Stop-WithError "Host Postgres not reachable at ${pgHost}:${pgPort}"
         }
+        $allArgs = @($Command) + $ExtraArgs
+        Invoke-ManagePy -ManageArgs $allArgs
     }
 
     'sql' {

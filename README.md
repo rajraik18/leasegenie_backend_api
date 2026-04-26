@@ -96,7 +96,7 @@ Three persistence tiers, each optimised for its access pattern:
 |---|---|---|
 | **Relational** | **SQL Server 2022** (via pyodbc + ODBC Driver 18) — SQLite fallback for dev | Projects, Properties, Tenants, Documents, FieldValues, FieldOverrides, AuditLog, ExtractionJobs. All transactional writes, the authoritative source of truth. |
 | **Vector** | **ChromaDB** (embedded, persists to disk at `data/vector_store/`) | One vector per lease clause, scoped by `tenant_id` + `document_id` + `clause_ref`. Populated on document upload via Ollama `nomic-embed-text` (768-dim). Powers the agent's `semantic_search` tool and acts as a cache to skip re-OCR on re-extraction. |
-| **File** | Local filesystem under `uploads/` | Raw PDFs. Also persisted in Docker volume for durability. |
+| **File** | Local filesystem under `uploads/` | Raw PDFs uploaded by users. |
 
 The vector store is populated asynchronously by a separate Celery task (`leasegenie.index_document`) fired off when a document is uploaded, so the upload endpoint returns in milliseconds while OCR + embedding runs in the background. If the vector store is ever unavailable, the `semantic_search` tool silently falls back to BM25 lexical search so extraction never breaks.
 
@@ -167,31 +167,16 @@ The executor walks `Q1 → Q2 → Q3`, flipping branches based on YES/NO, aggreg
 ## Prerequisites
 
 - **Python 3.11+**
-- **SQL Server 2022** (or SQLite for dev) — production uses MSSQL via pyodbc + ODBC Driver 18
+- **PostgreSQL 16+ with pgvector** — primary backend (SQLite works as a dev fallback but loses pgvector)
+- **Redis 7+** — Celery broker
 - **Ollama** — [install](https://ollama.com/download) — serves both the chat model and the embedding model
-- **Redis** — Celery broker (or run eager in dev)
-- **Tesseract** (optional, for scanned PDFs) — `apt install tesseract-ocr`
-- **Docker + docker-compose** — recommended for one-command setup of the whole stack (MSSQL + Redis + Ollama + API + worker)
+- **Tesseract** (optional, for scanned PDFs) — `apt install tesseract-ocr` on Linux, [installer](https://github.com/UB-Mannheim/tesseract/wiki) on Windows
 
-### Install ODBC Driver 18 (if not using docker-compose)
-
-```bash
-# macOS
-brew install msodbcsql18
-
-# Ubuntu / Debian
-curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
-sudo apt-get update
-sudo ACCEPT_EULA=Y apt-get install msodbcsql18 unixodbc-dev
-
-# Windows
-# Download installer from https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server
-```
+All four host services run as native installs. There is no Docker dependency.
 
 ### Pull Ollama models
 
-```bash
+```powershell
 # Chat model (extraction)
 ollama pull qwen2.5:32b-instruct-q5_K_M
 
@@ -211,33 +196,22 @@ Embedding model is always `nomic-embed-text` (~768 MB, 768-dim vectors).
 
 ## Install & run
 
-### Option A — Docker quick start (recommended)
+### Quick start (Windows native)
 
-Brings up SQL Server 2022 + Redis + Ollama + API + Celery worker in one command.
-
-```bash
-unzip leasegenie_api.zip && cd leasegenie_api
-docker compose up -d
-
-# Pull models into the containerized Ollama
-docker exec leasegenie-ollama ollama pull qwen2.5:14b-instruct-q5_K_M
-docker exec leasegenie-ollama ollama pull nomic-embed-text
-
+```powershell
+cd leasegenie_api
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+# Edit .env — set DATABASE_URL with your real Postgres creds, pick OLLAMA_MODEL
+.\scripts\db.ps1 init        # creates extensions + tables
+.\scripts\start.ps1          # background mode (default)
+# or: .\scripts\start.ps1 -Foreground   # opens 2 new console windows
 # API available on http://localhost:8000  (swagger: /docs)
 ```
 
-The stack auto-creates the `leasegenie` database + user on first boot. Data persists in named volumes (`mssql_data`, `redis_data`, `ollama_data`, `api_data`) so you can `docker compose down` and `up` without losing state. Uncomment the GPU block in `docker-compose.yml` if you have an NVIDIA GPU + the nvidia-container-toolkit.
-
-### Option B — Manual install (local dev)
-
-```bash
-unzip leasegenie_api.zip && cd leasegenie_api
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-# Edit .env — point DATABASE_URL at your SQL Server (or leave as sqlite for dev)
-#          — set OLLAMA_MODEL to the chat model you pulled
-```
+`.\scripts\stop.ps1` to shut down. `.\scripts\restart.ps1 -Full` to reinstall requirements and restart. For production-grade auto-start / auto-restart, register as Windows Services with `.\deploy\windows\install-services.ps1` — see `deploy/windows/README.md`.
 
 Precompile the playbooks (also runs automatically on first startup):
 
@@ -542,8 +516,8 @@ leasegenie_api/
 │   ├── test_reconciliation.py          # red flags
 │   ├── test_vector_store.py            # NEW — vector + embeddings
 │   └── test_excel_export.py            # NEW — xlsx layout
-├── Dockerfile                          # NEW — Python + ODBC Driver 18 + tesseract
-├── docker-compose.yml                  # NEW — MSSQL + Redis + Ollama + API + worker
+├── deploy/windows/                     # Windows Service installer (NSSM / sc.exe)
+├── scripts/                            # PowerShell lifecycle: start / restart / stop / db
 ├── requirements.txt
 ├── .env.example
 └── README.md

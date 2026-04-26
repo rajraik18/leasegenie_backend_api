@@ -7,6 +7,12 @@ venv/
 *.db
 *.db-journal
 uploads/
+exports/
+backups/
+run/
+logs/
+.lifecycle.lock
+deploy/windows/bin/
 .pytest_cache/
 .coverage
 .mypy_cache/
