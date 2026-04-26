@@ -7,7 +7,7 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -159,8 +159,12 @@ def list_documents(tenant_id: str, db: Session = Depends(get_db)) -> list[Docume
     return [DocumentOut.model_validate(d) for d in docs]
 
 
-@router.delete("/{tenant_id}/documents/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_document(tenant_id: str, document_id: str, db: Session = Depends(get_db)) -> None:
+@router.delete(
+    "/{tenant_id}/documents/{document_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+)
+def delete_document(tenant_id: str, document_id: str, db: Session = Depends(get_db)) -> Response:
     doc = db.get(Document, document_id)
     if doc is None or doc.tenant_id != tenant_id:
         raise HTTPException(status_code=404, detail="document not found")
@@ -176,3 +180,4 @@ def delete_document(tenant_id: str, document_id: str, db: Session = Depends(get_
         logger.warning("vector store delete failed for %s: %s", document_id, exc)
     db.delete(doc)
     db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
