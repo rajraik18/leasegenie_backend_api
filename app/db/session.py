@@ -59,10 +59,17 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def get_db() -> Session:
-    """FastAPI dependency — yields a session and closes on teardown."""
+    """FastAPI dependency — yields a session and closes on teardown.
+
+    Rolls back on exception so a half-applied transaction is not returned
+    to the connection pool in a dirty state.
+    """
     db = SessionLocal()
     try:
         yield db
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 

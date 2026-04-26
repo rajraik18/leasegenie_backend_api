@@ -49,21 +49,21 @@ class FieldDetailOut(FieldConfigOut):
 # ---------------------------------------------------------------------------
 
 class TenantIn(BaseModel):
-    name: str
+    name: str = Field(min_length=1, max_length=200)
     suite_number: str | None = None
     abstract_type: AbstractType = "Full Abstract"
 
 
 class PropertyIn(BaseModel):
-    name: str
+    name: str = Field(min_length=1, max_length=200)
     property_type: PropertyType
     address: str | None = None
     tenants: list[TenantIn] = Field(default_factory=list)
 
 
 class OrderCreate(BaseModel):
-    project_name: str
-    properties: list[PropertyIn]
+    project_name: str = Field(min_length=1, max_length=200)
+    properties: list[PropertyIn] = Field(min_length=1)
 
 
 class TenantOut(BaseModel):

@@ -51,6 +51,12 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/schemas", tags=["schemas"])
 
+# Hard cap on uploaded schema JSON files. A schema is metadata describing
+# extraction fields — anything larger than this is almost certainly an
+# accidental upload of the wrong file (a PDF, a corpus, etc.).
+_MAX_SCHEMA_BYTES = 5 * 1024 * 1024  # 5 MB
+_SCHEMA_CHUNK = 64 * 1024
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -70,8 +76,23 @@ async def _read_schema_payload(
     """
     if file is not None:
         try:
-            raw = await file.read()
-            return json.loads(raw)
+            buf = bytearray()
+            while True:
+                chunk = await file.read(_SCHEMA_CHUNK)
+                if not chunk:
+                    break
+                buf.extend(chunk)
+                if len(buf) > _MAX_SCHEMA_BYTES:
+                    raise HTTPException(
+                        status_code=413,
+                        detail=(
+                            f"schema file exceeds the "
+                            f"{_MAX_SCHEMA_BYTES // (1024 * 1024)} MB limit"
+                        ),
+                    )
+            return json.loads(bytes(buf))
+        except HTTPException:
+            raise
         except json.JSONDecodeError as exc:
             raise HTTPException(
                 status_code=400,
