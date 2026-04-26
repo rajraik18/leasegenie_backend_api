@@ -70,6 +70,11 @@ class Settings(BaseSettings):
     db_pool_size: int = 15
     db_max_overflow: int = 20
 
+    # File retention — Celery-beat tasks delete files in upload_dir /
+    # export_dir whose mtime is older than these many days. 0 disables.
+    upload_retention_days: int = 90
+    export_retention_days: int = 30
+
     @property
     def is_sqlite(self) -> bool:
         return self.database_url.startswith("sqlite")

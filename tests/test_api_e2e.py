@@ -2,6 +2,7 @@
 
 Exercises the public endpoints against a TestClient + SQLite. Covers:
   - /health, /readiness, /docs gating
+  - /metrics (Prometheus exposition)
   - CORS exposure
   - X-Request-ID round-trip
   - API-key auth on/off
@@ -46,6 +47,24 @@ def test_docs_exposed_in_debug(client):
     assert client.get("/docs").status_code == 200
     assert client.get("/redoc").status_code == 200
     assert client.get("/openapi.json").status_code == 200
+
+
+def test_metrics_endpoint(client):
+    """Prometheus exposition endpoint must:
+      - return 200 with text/plain;version=… content-type
+      - emit at least one HTTP-request metric for the call we just made
+    """
+    # Prime the counter with a known route.
+    client.get("/health")
+    r = client.get("/metrics")
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("text/plain")
+    body = r.text
+    assert "leasegenie_http_requests_total" in body
+    assert "leasegenie_http_request_duration_seconds" in body
+    # /health hits should show up with status=200
+    assert 'path_template="/health"' in body
+    assert 'status="200"' in body
 
 
 # ---------------------------------------------------------------------------

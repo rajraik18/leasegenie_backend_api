@@ -205,8 +205,9 @@ if ($UseNSSM) {
     & $nssm set $apiSvc AppStopMethodConsole 30000
     & $nssm set $apiSvc Description 'LeaseGenie FastAPI server (uvicorn).'
 
-    # Worker service
-    & $nssm install $workerSvc $venvPython '-m' 'celery' '-A' 'app.workers.celery_app:celery_app' 'worker' '--loglevel=info' "--concurrency=$workerConcurrency" '-P' $workerPool
+    # Worker service. `-B` runs the beat scheduler alongside the worker so
+    # the daily cleanup tasks fire without a separate process.
+    & $nssm install $workerSvc $venvPython '-m' 'celery' '-A' 'app.workers.celery_app:celery_app' 'worker' '-B' '--loglevel=info' "--concurrency=$workerConcurrency" '-P' $workerPool
     & $nssm set $workerSvc AppDirectory $repoRoot
     & $nssm set $workerSvc AppStdout $workerLog
     & $nssm set $workerSvc AppStderr $workerLog
@@ -239,7 +240,7 @@ if ($UseNSSM) {
     # (which it does via SettingsConfigDict env_file=".env"). We just need
     # to make sure the working directory is the repo root so .env is found.
     $apiBin = "`"$venvPython`" -m uvicorn app.main:app --host $apiHost --port $apiPort"
-    $workerBin = "`"$venvPython`" -m celery -A app.workers.celery_app:celery_app worker --loglevel=info --concurrency=$workerConcurrency -P $workerPool"
+    $workerBin = "`"$venvPython`" -m celery -A app.workers.celery_app:celery_app worker -B --loglevel=info --concurrency=$workerConcurrency -P $workerPool"
     sc.exe create $apiSvc binPath= "cmd.exe /c cd /d `"$repoRoot`" && $apiBin >> `"$apiLog`" 2>&1" start= auto DisplayName= 'LeaseGenie API' | Out-Null
     sc.exe create $workerSvc binPath= "cmd.exe /c cd /d `"$repoRoot`" && $workerBin >> `"$workerLog`" 2>&1" start= auto DisplayName= 'LeaseGenie Worker' depend= $apiSvc | Out-Null
     sc.exe failure $apiSvc reset= 60 actions= restart/5000/restart/5000/restart/5000 | Out-Null

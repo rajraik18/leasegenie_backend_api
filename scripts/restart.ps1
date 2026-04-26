@@ -62,7 +62,7 @@ try {
     $apiArgs = @('-m', 'uvicorn', 'app.main:app', '--host', $apiHost, '--port', $apiPort)
     Start-LgProcess -Name 'api' -FilePath $py -ArgumentList $apiArgs -Mode $mode | Out-Null
 
-    $workerArgs = @('-m', 'celery', '-A', 'app.workers.celery_app:celery_app', 'worker', '--loglevel=info', "--concurrency=$workerConcurrency", '-P', $workerPool)
+    $workerArgs = @('-m', 'celery', '-A', 'app.workers.celery_app:celery_app', 'worker', '-B', '--loglevel=info', "--concurrency=$workerConcurrency", '-P', $workerPool)
     Start-LgProcess -Name 'worker' -FilePath $py -ArgumentList $workerArgs -Mode $mode | Out-Null
 
     # ---- Smoke ----
