@@ -268,7 +268,53 @@ The dumps are SQL -- restore with `psql -U leasegenie -d leasegenie -f <file.sql
 
 ---
 
-## 8. Migrating from v2.x (Docker hybrid) to v3.0 (Windows-native)
+## 8. Rollback procedure
+
+If a release breaks production, revert in this order:
+
+```powershell
+# 1. Stop the services so the broken code stops handling traffic.
+Stop-Service leasegenie-worker, leasegenie-api -Force
+
+# 2. (Optional) snapshot the DB before rolling back, so you can compare or
+#    forward-fix if the new release wrote data the old code can't read.
+.\scripts\db.ps1 backup     # writes .\backups\leasegenie_<timestamp>.sql
+
+# 3. Check out the previous good commit. Use the merge commit SHA from
+#    `git log origin/main` -- pick the one BEFORE the broken release.
+git fetch origin main
+git checkout <good-commit-sha>
+
+# 4. Re-install dependencies in case requirements.txt changed between
+#    the good and broken release.
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+# 5. (If the broken release added a schema migration) revert the schema.
+#    For additive changes (`ADD COLUMN`, new tables) the OLD code ignores
+#    the extra columns and works fine, so you can skip this. For
+#    destructive migrations, restore from the pg_dump from step 2:
+#    psql -U leasegenie -d leasegenie -f .\backups\leasegenie_<timestamp>.sql
+
+# 6. Restart the services.
+Start-Service leasegenie-api
+Start-Service leasegenie-worker
+
+# 7. Confirm.
+Invoke-WebRequest http://localhost:8000/readiness -UseBasicParsing
+Get-Content .\logs\api.log -Tail 40
+```
+
+**Recommended discipline.** Tag every production release: `git tag -a v3.0.1 -m "..."` before `Start-Service`. Then rollbacks are `git checkout v3.0.0` instead of hunting commit SHAs. Push tags to the remote: `git push --tags`.
+
+**What rolling back does NOT undo:**
+- Files already deleted by the daily retention beat task.
+- Audit-log rows written by the new release (they're append-only).
+- Vector-store rows from extractions run during the broken window — the orphan-cleanup beat task handles these.
+
+---
+
+## 9. Migrating from v2.x (Docker hybrid) to v3.0 (Windows-native)
 
 ```powershell
 # 1. Tear down the old containers (data lives in host Postgres -- nothing to migrate)
@@ -293,7 +339,7 @@ If you were running Postgres on the host already (the v2.2 hybrid setup), it sta
 
 ---
 
-## 9. What this guide does NOT cover
+## 10. What this guide does NOT cover
 
 - High-availability multi-host topologies (use a managed Postgres + Redis cluster + a load balancer in front of multiple Windows hosts).
 - Linux deployment (the lifecycle scripts and Windows Services are Windows-only by design).

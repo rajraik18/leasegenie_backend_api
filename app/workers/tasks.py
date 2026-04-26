@@ -159,3 +159,55 @@ def cleanup_old_exports_task() -> dict:
         max_age_days=settings.export_retention_days,
         kind="exports",
     )
+
+
+@shared_task(name="leasegenie.cleanup_stale_jobs")
+def cleanup_stale_jobs_task() -> dict:
+    """Mark queued / running ExtractionJob rows as failed when they're older
+    than `JOB_STALE_TTL_HOURS`.
+
+    Runs hourly. A job stays in `queued` or `running` typically for a few
+    seconds (eager mode) to a few minutes (real worker). Anything older
+    than the TTL almost certainly means a worker died mid-task and the
+    row is wedged.
+    """
+    if settings.job_stale_ttl_hours <= 0:
+        return {"failed": 0}
+
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=settings.job_stale_ttl_hours)
+    db = SessionLocal()
+    failed = 0
+    try:
+        from sqlalchemy import select
+
+        rows = db.execute(
+            select(ExtractionJob).where(
+                ExtractionJob.status.in_(["queued", "running"]),
+                ExtractionJob.created_at < cutoff,
+            )
+        ).scalars().all()
+        for job in rows:
+            job.status = "failed"
+            job.error = (job.error or "") + (
+                f" job timed out after {settings.job_stale_ttl_hours}h"
+            )
+            job.error = job.error[:4000]
+            job.finished_at = datetime.now(timezone.utc)
+            failed += 1
+        if failed:
+            db.commit()
+            logger.info("retention: marked %d stale jobs as failed", failed)
+    finally:
+        db.close()
+    return {"failed": failed}
+
+
+@shared_task(name="leasegenie.cleanup_orphan_embeddings")
+def cleanup_orphan_embeddings_task() -> dict:
+    """Drop clause_embeddings rows whose document_id no longer exists in the
+    documents table. Safety-net for cases where document delete succeeded
+    but the vector-store delete failed transiently."""
+    from app.services.vector_store import get_vector_store
+
+    removed = get_vector_store().delete_orphans()
+    return {"removed": removed}

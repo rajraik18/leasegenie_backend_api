@@ -151,18 +151,55 @@ function Stop-AndRemove {
 }
 
 # ---- Build env block (passed to NSSM AppEnvironmentExtra or sc.exe via setenv hack) ----
-$envLines = Get-Content $envFile | Where-Object {
-    $_ -and ($_ -notmatch '^\s*#') -and ($_ -match '=')
-}
+# Use python-dotenv (already a transitive dep via pydantic-settings) so the
+# parser handles quoted values, inline comments, escaped chars, and
+# `export FOO=bar` syntax correctly. Falls back to a naive splitter if
+# python-dotenv isn't reachable (e.g. venv missing).
+$envParserPy = @"
+import sys
+from pathlib import Path
+try:
+    from dotenv import dotenv_values
+except Exception:
+    sys.exit(2)
+items = dotenv_values(sys.argv[1])
+for k, v in items.items():
+    if v is None:
+        continue
+    print(f"{k}={v}")
+"@
+$envParserScript = New-TemporaryFile
+Set-Content -Path $envParserScript -Value $envParserPy -Encoding UTF8
 $envPairs = @()
-foreach ($l in $envLines) {
-    $parts = $l -split '=', 2
-    if ($parts.Length -eq 2) {
-        $k = $parts[0].Trim()
-        $v = $parts[1].Trim()
-        $envPairs += "$k=$v"
+try {
+    $parsed = & $venvPython $envParserScript $envFile 2>$null
+    if ($LASTEXITCODE -eq 0 -and $parsed) {
+        $envPairs = @($parsed | Where-Object { $_ -match '^[A-Za-z_][A-Za-z0-9_]*=' })
+    }
+} catch {}
+finally {
+    Remove-Item $envParserScript -Force -ErrorAction SilentlyContinue
+}
+
+# Fallback if python-dotenv not available -- keeps the old naive parser as
+# a safety net (better than failing the install).
+if (-not $envPairs) {
+    Write-Host "[!] python-dotenv unavailable -- using naive .env parser" -ForegroundColor Yellow
+    $envLines = Get-Content $envFile | Where-Object {
+        $_ -and ($_ -notmatch '^\s*#') -and ($_ -match '=')
+    }
+    foreach ($l in $envLines) {
+        $parts = $l -split '=', 2
+        if ($parts.Length -eq 2) {
+            $k = $parts[0].Trim()
+            $v = $parts[1].Trim()
+            $envPairs += "$k=$v"
+        }
     }
 }
+
+# Used by Get-EnvOrDefault below.
+$envLines = $envPairs
 
 # ---- Install ----
 Write-Host "[*] Repo root:    $repoRoot"

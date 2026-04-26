@@ -29,7 +29,7 @@ import urllib.parse
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
@@ -98,9 +98,11 @@ def _safe_filename(raw: str | None, fallback: str) -> str:
         },
         400: {"description": "Invalid input (property_type, abstract_type, or file count)"},
         404: {"description": "schema_id specified but not found"},
+        429: {"description": "Rate limit exceeded (see RATE_LIMIT_EXTRACT in .env)"},
     },
 )
 def extract_pdf(
+    request: Request,
     property_type: str = Query(..., description="Retail | Industrial | Office | Mixed-Use"),
     abstract_type: str = Query("Full Abstract"),
     tenant_name: str = Query("Anonymous Tenant"),
@@ -306,6 +308,15 @@ def extract_pdf(
         job.status = "failed"
         job.error = f"could not enqueue extraction task: {exc}"[:4000]
         db.commit()
+        # Clean up the on-disk uploads -- the job will never run, so the
+        # PDFs are dead weight. Documents rows stay (the caller can
+        # see the failed job + tenant in the DB and delete via the
+        # documents API if they want).
+        import shutil as _shutil
+        try:
+            _shutil.rmtree(dest_dir, ignore_errors=True)
+        except OSError:
+            pass
         raise HTTPException(
             status_code=503,
             detail="extraction queue unavailable — try again shortly",

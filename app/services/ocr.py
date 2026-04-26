@@ -276,6 +276,15 @@ def extract_document_text(
     ocr_any_available = _PADDLE_AVAILABLE or _TESSERACT_AVAILABLE
 
     with pdfplumber.open(str(pdf_path)) as pdf:
+        # Enforce the configured page-count cap before walking pages so
+        # a 50,000-page PDF cannot wedge a worker for hours.
+        from app.config import settings as _settings
+        cap = _settings.max_pdf_pages
+        if cap > 0 and len(pdf.pages) > cap:
+            raise ValueError(
+                f"PDF has {len(pdf.pages)} pages -- exceeds MAX_PDF_PAGES={cap}"
+            )
+
         for idx, page in enumerate(pdf.pages, start=1):
             try:
                 digital_text = page.extract_text() or ""

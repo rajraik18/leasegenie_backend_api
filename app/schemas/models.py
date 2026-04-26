@@ -218,6 +218,18 @@ class FieldOverrideIn(BaseModel):
     actor: str | None = None
 
 
+class FieldOverrideAck(BaseModel):
+    """Lightweight ack returned by PATCH /tenants/{id}/fields/{field_id}.
+
+    Avoids recomputing the full TenantAbstractionOut grid on every override
+    edit. Clients that need the refreshed grid can GET /abstraction next.
+    """
+    tenant_id: str
+    field_id: str
+    action: str          # "override" | "revert"
+    value: str | None    # the new override value, or None on revert
+
+
 class AuditLogOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: str
