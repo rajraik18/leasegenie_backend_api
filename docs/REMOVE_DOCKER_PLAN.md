@@ -1,16 +1,38 @@
-# Plan — Remove Docker From the Project
+# Plan — Remove Docker From the Project (Windows-native)
 
 ## Context
 
-Today the repo runs in **hybrid Docker mode**: the API and Celery worker run inside containers built from the `Dockerfile`, while Postgres/pgvector, Redis, and Ollama run as host-installed services that the containers reach via `host.docker.internal`. The user wants to drop Docker entirely so every component — including the API and the worker — runs as a native process on the host.
+Today the repo runs in **hybrid Docker mode**: the API and Celery worker run inside containers built from the `Dockerfile`, while Postgres/pgvector, Redis, and Ollama run as host-installed services that the containers reach via `host.docker.internal`. The user wants to drop Docker entirely so every component — including the API and the worker — runs as a native Windows process. Postgres + pgvector, Redis, and Ollama remain on the host (already the case).
 
-The architecture work is already 80 % done because Postgres/Redis/Ollama are already on the host. The remaining work is:
-1. Delete the container artefacts.
-2. Rewrite the lifecycle scripts (`start`/`stop`/`restart`/`status`/`logs`/`db`/`daily_run`) to manage native `uvicorn` + `celery` processes instead of compose services.
-3. Strip `host.docker.internal` references from `.env.example`, configs, and docs (services are now reached at plain `localhost`).
-4. Provide a process-management story for production (systemd unit files for Linux, NSSM/Task Scheduler hint for Windows).
+**Reviewer answers (locked in)**
 
-The end state: `python -m venv .venv && pip install -r requirements.txt && scripts/start.sh` brings the system up; `scripts/stop.sh` brings it down. No Docker daemon required anywhere.
+1. **Production target = Windows only.** No Linux systemd unit files. Production resilience is provided by registering the API and worker as **Windows Services** (NSSM-based wrapper described below), so they auto-start on reboot and auto-restart on crash.
+2. **Two run modes for the dev / single-host scripts** — both supported, default is **background + log file**:
+   - `-Background` (default) — `Start-Process … -WindowStyle Hidden`, PID file in `.\run\<name>.pid`, stdout/stderr redirected to `.\logs\<name>.log`.
+   - `-Foreground` — opens a **new console window per process** via `Start-Process powershell -ArgumentList …`, so you can watch live output during development. PID file still written so `stop.ps1` works.
+3. **Keep `scripts/*.ps1` only.** The bash `scripts/*.sh` siblings get **deleted**. Lifecycle scope is just **start / restart / stop** (no separate logs/status/daily_run scripts in scope; existing functionality is folded into the three lifecycle scripts and `db.ps1`).
+
+The end state on a fresh Windows host:
+
+```powershell
+# one-time
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env   # then edit DATABASE_URL etc.
+.\scripts\db.ps1 init
+
+# daily
+.\scripts\start.ps1            # background (default)
+.\scripts\start.ps1 -Foreground  # opens 2 new consoles
+.\scripts\restart.ps1
+.\scripts\stop.ps1
+
+# production (one-time service registration)
+.\deploy\windows\install-services.ps1   # registers leasegenie-api + leasegenie-worker
+```
+
+No Docker daemon required anywhere.
 
 ## Scope inventory
 
@@ -21,121 +43,159 @@ The end state: `python -m venv .venv && pip install -r requirements.txt && scrip
 | `Dockerfile` | API image no longer built |
 | `docker-compose.yml` | No services to compose |
 | `.dockerignore` | Only used by `docker build` |
+| `scripts/_common.sh` | Bash siblings dropped — Windows only |
+| `scripts/start.sh` | "" |
+| `scripts/stop.sh` | "" |
+| `scripts/restart.sh` | "" |
+| `scripts/status.sh` | "" |
+| `scripts/logs.sh` | "" |
+| `scripts/daily_run.sh` | "" |
+| `scripts/db.sh` | "" |
 
-### B. Scripts to rewrite (drop the compose wrapper, drive native processes)
-
-All of `scripts/*.sh` and `scripts/*.ps1` currently call `${COMPOSE} up/down/exec/logs`. They become:
+### B. PowerShell scripts to rewrite
 
 | Script | New behaviour |
 |---|---|
-| `scripts/_common.sh` / `_Common.ps1` | Remove `detect_compose`, `wait_for_health` (compose-based), `ensure_ollama_model` (compose `exec`), `graceful_stop`. Replace with: `start_bg <name> <cmd>` (writes PID file under `./run/<name>.pid`, redirects stdout/stderr to `./logs/<name>.log`), `stop_bg <name>` (SIGTERM + grace + SIGKILL), `pid_alive <name>`, `port_listening <port>`. Keep `acquire_lock`, the colour helpers, the `.env` boot-strap, and the URL-parsing helpers. |
-| `scripts/start.sh` / `start.ps1` | Pre-flight check Postgres / Redis / Ollama on `localhost` (already there). Activate `./.venv`. `start_bg api uvicorn app.main:app --host 0.0.0.0 --port 8000`. `start_bg worker celery -A app.workers.celery_app:celery_app worker --loglevel=info --concurrency=2`. Tail `./logs/api.log` until `/health` responds. |
-| `scripts/stop.sh` / `stop.ps1` | `stop_bg worker` then `stop_bg api`. `--down` flag becomes meaningless (no containers/volumes); keep `--purge` to delete `./logs` and `./run`. |
-| `scripts/restart.sh` / `restart.ps1` | `--rolling` = `stop_bg` + `start_bg` per service. `--full` = same plus `pip install -r requirements.txt` first (replaces `compose build`). |
-| `scripts/status.sh` / `status.ps1` | Print PIDs from `./run`, listening-port checks, `/health` curl, host Postgres/Redis/Ollama reachability. |
-| `scripts/logs.sh` / `logs.ps1` | `tail -F ./logs/<service>.log`. `--follow`, `--tail=N`, `<service>` args preserved. |
-| `scripts/db.sh` / `db.ps1` | Already mostly host-native. Drop the `${COMPOSE} exec api python -m scripts.db.manage` fallback — call `python -m scripts.db.manage` directly (the venv is already active). Keep `psql`/`pg_dump` paths. |
-| `scripts/daily_run.sh` / `daily_run.ps1` | Replace `${COMPOSE} stop -t 30 api` and `${COMPOSE} up -d --no-deps` with the new `stop_bg`/`start_bg`. Replace `${COMPOSE} logs --tail=30 api` with `tail -n 30 ./logs/api.log`. |
+| `scripts/_Common.ps1` | Drop `Test-DockerInstalled`, `Get-ComposeCommand`, `Wait-ForServiceHealth` (compose-based), `Invoke-OllamaModelPull` (compose `exec`), `Stop-ComposeService`. **Add**: `Start-LgProcess -Name -Cmd -Args -Mode <Background\|Foreground>` (writes `.\run\<name>.pid`, redirects to `.\logs\<name>.log` in Background, or `Start-Process powershell -NoExit -Command …` in Foreground), `Stop-LgProcess -Name [-TimeoutSec 30]` (graceful CTRL_BREAK_EVENT first; falls back to `Stop-Process -Force`), `Test-LgProcessAlive -Name`, `Test-PortListening -Port`. Keep the colour helpers, `.env` boot-strap, `Get-DatabaseUrlParts`, and the lifecycle lock. |
+| `scripts/start.ps1` | Params: `[switch]$Foreground` (else background = default), `[switch]$SkipChecks`, `[switch]$Build` (now means `pip install -r requirements.txt`). Pre-flight: Postgres / Redis / Ollama TCP-reachable on `localhost`; `.\.venv` exists; `.env` present. Then: activate venv, `Start-LgProcess -Name api -Cmd python -Args 'app','main:app','-m','uvicorn','--host','0.0.0.0','--port','8000'` (or run uvicorn from venv directly), `Start-LgProcess -Name worker -Cmd celery -Args ' -A app.workers.celery_app:celery_app worker --loglevel=info --concurrency=2'`. Tail `.\logs\api.log` until `/health` returns 200. |
+| `scripts/restart.ps1` | Params: `[switch]$Full`, `[switch]$Foreground`. `-Full` runs `pip install -r requirements.txt` first. Otherwise: `Stop-LgProcess worker`, `Stop-LgProcess api`, then `Start-LgProcess` for each, in the same `-Foreground`/background mode. |
+| `scripts/stop.ps1` | Params: `[switch]$Purge`. Default: `Stop-LgProcess worker`, `Stop-LgProcess api`. With `-Purge`: also delete `.\run`, `.\logs`. Drop the existing `-Down` (compose-only) flag. |
+| `scripts/db.ps1` | Already mostly host-native. Drop the `docker compose exec api python -m scripts.db.manage` fallback — the active venv runs `python -m scripts.db.manage` directly. Keep `psql` / `pg_dump` paths. |
 
 ### C. Files to update (not delete)
 
 | Path | Change |
 |---|---|
 | `.env.example` | Replace every `host.docker.internal` with `localhost`. Drop the multi-paragraph "containers reach the host via..." block; replace with a short "Run all services on localhost" preamble. |
-| `app/db/session.py:80` | Comment mentions `docker-compose's mounted schema.sql` — rewrite to "tables created by `scripts/db.sh init` (which runs `scripts/db/schema.sql` via host `psql`)". |
-| `app/config.py` | The `database_url` default is `postgresql+psycopg2://CHANGE_ME:CHANGE_ME@postgres:5432/leasegenie` — change `postgres` to `localhost` for consistency. |
-| `README.md` | Replace the "Quick start with Docker" section with "Quick start (native)": create venv, `pip install -r requirements.txt`, set `.env`, `scripts/start.sh`. Drop the 10 docker references. |
-| `DEPLOYMENT.md` | Heavy edit (31 references). Replace "Hybrid setup" → "Native setup". Add a new section for systemd unit files (see §D below). Keep the host-side prerequisite checklists for Postgres, Redis, Ollama unchanged. |
-| `CHANGELOG.md` | Add a single entry under a new version line (`v3.0.0 — Docker removed`); do NOT rewrite history. |
-| `scripts/README.md` | Replace docker-compose lifecycle table with the new native scripts. |
+| `app/db/session.py:80` | Comment mentions `docker-compose's mounted schema.sql` — rewrite to "tables created by `scripts/db.ps1 init` (which runs `scripts/db/schema.sql` via host `psql`)". |
+| `app/config.py` | Change the `database_url` default host fragment from `postgres` to `localhost` — keeps the `CHANGE_ME` cred placeholders. |
+| `README.md` | Replace the "Quick start with Docker" section with "Quick start (Windows native)" — venv, `pip install -r requirements.txt`, `.env`, `scripts\db.ps1 init`, `scripts\start.ps1`. Drop all 10 docker references. |
+| `DEPLOYMENT.md` | Heavy edit (31 references). Replace "Hybrid setup" → "Native Windows setup". Add a new section "Production: Windows Services" pointing at `deploy/windows/`. Keep the host-side prerequisite checklists for Postgres, Redis, Ollama; add a note that they should be configured to start automatically (Windows service auto-start). |
+| `CHANGELOG.md` | Add a single entry under a new version line (`v3.0.0 — Docker removed, Windows-native`); do NOT rewrite history. |
+| `scripts/README.md` | Replace docker-compose lifecycle table with the three PowerShell scripts. |
 | `scripts/db/README.md` | Drop the "fall back to api container" branch in the description. |
-| `scripts/db/migrations/v2_0_0_upgrade.sql` | One header comment; trim if obsolete. |
+| `scripts/db/migrations/v2_0_0_upgrade.sql` | One header comment to trim if it mentions docker. |
+| `.gitignore` | Add `run/`, `logs/`, `.venv/`, `.lifecycle.lock` if not already present. |
 
 ### D. Files to add
 
 | Path | Purpose |
 |---|---|
-| `deploy/systemd/leasegenie-api.service` | Linux production unit: `ExecStart=/path/to/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000`, `EnvironmentFile=/path/to/.env`, `Restart=on-failure`, `User=leasegenie`. |
-| `deploy/systemd/leasegenie-worker.service` | Same shape, runs the celery command. `After=leasegenie-api.service redis.service postgresql.service`. |
-| `deploy/systemd/README.md` | Two-paragraph install snippet (`sudo cp *.service /etc/systemd/system/ && systemctl enable --now ...`). |
-| `.gitignore` additions | `run/`, `logs/`, `.venv/` (verify; if already there, skip). |
-
-Windows production users get a NSSM / Task Scheduler hint in `DEPLOYMENT.md` rather than separate artefacts — the dev `scripts/*.ps1` are sufficient for non-prod.
+| `deploy/windows/install-services.ps1` | One-shot installer. Detects `nssm.exe` on PATH (or downloads if `-FetchNSSM`); registers `leasegenie-api` and `leasegenie-worker` services pointing at the venv `python.exe` / `uvicorn.exe` / `celery.exe`. Sets `AppDirectory` to the repo root, `AppEnvironmentExtra` from `.env`, `AppStdout` / `AppStderr` to `.\logs\<svc>.log`, `Start=SERVICE_AUTO_START`, `AppExit Default Restart`, `AppRestartDelay=5000`. Ends with `Start-Service leasegenie-api leasegenie-worker`. |
+| `deploy/windows/uninstall-services.ps1` | `Stop-Service` then `nssm remove <svc> confirm` for both services. |
+| `deploy/windows/README.md` | Plain-English install / uninstall / view-logs instructions; explains how the services map to the dev `start.ps1` flow. |
 
 ### E. Files NOT touched
 
-- All of `app/` apart from the two surgical edits above. The application code already works without Docker (we proved this in the last verification — uvicorn ran fine against SQLite locally).
+- All of `app/` apart from the two surgical edits above. The application code already works without Docker (verified earlier — uvicorn ran cleanly under SQLite locally).
 - `requirements.txt` — same Python deps, same versions.
 - `tests/` — unchanged.
 - `data/` — unchanged.
-- `scripts/db/schema.sql`, `scripts/db/manage.py` — these were always host-side; no change.
+- `scripts/db/schema.sql`, `scripts/db/manage.py` — were always host-side; no change.
 
 ## Process management design
 
-Dev / single-host prod uses a tiny PID-file approach to keep the dev story (and the existing scripts) one-command:
+### Dev: PID-file scripts (Windows)
 
 ```
-./run/api.pid          # PID written by scripts/_common.sh::start_bg
-./run/worker.pid
-./logs/api.log         # uvicorn stdout/stderr
-./logs/worker.log      # celery stdout/stderr
+.\run\api.pid          # PID written by Start-LgProcess
+.\run\worker.pid
+.\logs\api.log         # uvicorn stdout/stderr (Background mode)
+.\logs\worker.log      # celery stdout/stderr (Background mode)
+.\.lifecycle.lock      # prevents concurrent start.ps1/stop.ps1
 ```
 
-`start_bg` is roughly:
-```bash
-start_bg() {
-    local name=$1; shift
-    local pidfile="./run/${name}.pid"
-    local logfile="./logs/${name}.log"
-    if pid_alive "$name"; then die "${name} already running (PID $(cat "$pidfile"))"; fi
-    mkdir -p ./run ./logs
-    nohup "$@" >>"$logfile" 2>&1 &
-    echo $! >"$pidfile"
-    log "Started ${name} (PID $!) — logs: ${logfile}"
+**Background mode (default)** — sketch:
+```powershell
+function Start-LgProcess {
+    param(
+        [Parameter(Mandatory)] [string]$Name,
+        [Parameter(Mandatory)] [string]$Cmd,
+        [string[]]$Args = @(),
+        [ValidateSet('Background','Foreground')] [string]$Mode = 'Background'
+    )
+    $pidFile = ".\run\$Name.pid"
+    $logFile = ".\logs\$Name.log"
+    if (Test-LgProcessAlive -Name $Name) {
+        Stop-WithError "$Name already running (PID $(Get-Content $pidFile))"
+    }
+    New-Item -ItemType Directory -Force -Path .\run, .\logs | Out-Null
+
+    if ($Mode -eq 'Background') {
+        $p = Start-Process -FilePath $Cmd -ArgumentList $Args `
+            -RedirectStandardOutput $logFile -RedirectStandardError $logFile `
+            -WindowStyle Hidden -PassThru
+    } else {
+        # Foreground: open a new console window so the user can see live output.
+        $launch = "& '$Cmd' $($Args -join ' '); Read-Host 'Press Enter to close'"
+        $p = Start-Process powershell -ArgumentList '-NoExit','-NoLogo','-Command',$launch -PassThru
+    }
+
+    Set-Content -Path $pidFile -Value $p.Id
+    Write-LgInfo "Started $Name (PID $($p.Id), mode $Mode) — logs: $logFile"
 }
 ```
 
-For multi-host or unattended production, the systemd units in `deploy/systemd/` are the canonical answer; the PID-file scripts are dev-only.
+`Stop-LgProcess` reads the PID, sends a graceful close (`Stop-Process -Id <pid>` first, falls back to `-Force` after `-TimeoutSec`), and deletes the PID file. The Foreground console windows close on Stop because the PID we recorded is the spawned `powershell.exe`.
+
+### Production: Windows Services
+
+`deploy/windows/install-services.ps1` registers two services via NSSM (small, MIT-licensed wrapper that turns any process into a Windows Service):
+
+```powershell
+nssm install leasegenie-api `"$venv\Scripts\python.exe`" -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+nssm set leasegenie-api AppDirectory $repoRoot
+nssm set leasegenie-api AppStdout $repoRoot\logs\api.log
+nssm set leasegenie-api AppStderr $repoRoot\logs\api.log
+nssm set leasegenie-api AppEnvironmentExtra (Get-Content .env -Raw)
+nssm set leasegenie-api Start SERVICE_AUTO_START
+nssm set leasegenie-api AppExit Default Restart
+nssm set leasegenie-api AppRestartDelay 5000
+# … same for leasegenie-worker (Celery) with After-style dependency on -api
+nssm set leasegenie-worker DependOnService leasegenie-api
+Start-Service leasegenie-api, leasegenie-worker
+```
+
+Operators can also use plain `sc.exe create … binPath=…` if they don't want NSSM, but NSSM is the default because it handles graceful shutdown (CTRL_BREAK_EVENT) and stdout logging cleanly. The PowerShell installer can be re-run idempotently — it stops + reinstalls if the services already exist.
 
 ## Verification (after implementation)
 
-1. `python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt` — clean install.
-2. Copy `.env.example` → `.env`, fill in real Postgres creds.
-3. `scripts/db.sh init` — pgvector + tables created on host Postgres.
-4. `scripts/start.sh` — both processes start; `./run/*.pid` written.
-5. `curl -fsS http://localhost:8000/health` → 200 with `fields_loaded=72`, `playbooks_loaded=79`.
-6. `scripts/status.sh` — both PIDs alive, ports 8000 listening, host services reachable.
-7. `scripts/logs.sh api --tail=20` → recent uvicorn output.
-8. End-to-end PDF extraction: `curl -F "files=@sample.pdf" http://localhost:8000/api/v1/extract/pdf` → 202 with `job_id`; poll `/jobs/{id}` until `complete`.
-9. `scripts/restart.sh --rolling` → both processes restart, no dropped requests on `/health`.
-10. `scripts/stop.sh` → both PIDs gone, ports free.
-11. `pytest tests/ -q` — same 23 passing as before (4 still skipped due to local `_cffi_backend` env quirk).
-12. Confirm no remaining matches: `grep -rIn -E 'docker|host\.docker\.internal|compose' --exclude-dir=.git --exclude=CHANGELOG.md .` returns only the new CHANGELOG entry.
+Run on a clean Windows host with Postgres+pgvector / Redis / Ollama installed:
 
-## Risks & open questions
+1. `python -m venv .venv ; .\.venv\Scripts\Activate.ps1 ; pip install -r requirements.txt` — clean install.
+2. `Copy-Item .env.example .env`, edit `DATABASE_URL` with real creds.
+3. `.\scripts\db.ps1 init` — pgvector + tables created on host Postgres.
+4. `.\scripts\start.ps1` — both processes start in background; `.\run\api.pid` + `.\run\worker.pid` written.
+5. `Invoke-WebRequest -UseBasicParsing http://localhost:8000/health` → 200, `fields_loaded=72`, `playbooks_loaded=79`.
+6. `Get-Content .\logs\api.log -Tail 20` — recent uvicorn output, no docker references.
+7. `.\scripts\start.ps1 -Foreground` (after a stop) → two new consoles open, live output streams to each.
+8. End-to-end PDF extraction: `Invoke-RestMethod -Method Post -InFile sample.pdf -Uri http://localhost:8000/api/v1/extract/pdf` → 202 with `job_id`; poll until `complete`.
+9. `.\scripts\restart.ps1` → both PIDs change; `/health` returns 200 within ~10 s.
+10. `.\scripts\stop.ps1` → PID files removed, port 8000 free, processes gone.
+11. `.\deploy\windows\install-services.ps1`; reboot; both services auto-start; `Get-Service leasegenie-*` shows `Running`.
+12. `pytest tests/ -q` from the venv — same 23 passing.
+13. Confirm no remaining matches: `Select-String -Pattern 'docker|host\.docker\.internal|compose' -Path . -Recurse -Exclude .git,CHANGELOG.md` returns only the new CHANGELOG entry.
+
+## Risks & mitigations
 
 | Risk | Mitigation |
 |---|---|
-| Operators currently running on Docker need a migration path | Single command in `DEPLOYMENT.md`: `docker compose down -v && python -m venv .venv && pip install -r requirements.txt && scripts/start.sh`. Data is in host Postgres, so nothing to migrate. |
-| Windows users without WSL: `nohup` and bash scripts don't apply | The `.ps1` siblings already exist; rewrite uses `Start-Process` + `$PID` files in the same shape. |
-| Daily-run script's "stop API for 5 minutes during ETL" pattern | New `stop_bg api` then `start_bg api` is faster than `compose stop`/`up -d`, so behaviour is preserved or better. |
-| `scripts/db.sh` has paths that called into the api container for ORM-aware ops (`status`, `check`, `seed`) | The container fallback was a convenience; the venv path is more direct. Drop the fallback entirely; the new flow runs `python -m scripts.db.manage` from the active venv. |
-| Production resilience without Docker's restart policy | The systemd units handle this (`Restart=on-failure`, `RestartSec=5s`). |
+| Operators currently on Docker need a migration path | One-line in `DEPLOYMENT.md`: `docker compose down -v ; python -m venv .venv ; pip install -r requirements.txt ; .\scripts\start.ps1`. Data lives in host Postgres so nothing to migrate. |
+| Foreground mode leaves orphan console windows if the user closes the parent shell | The PID file points at the spawned `powershell.exe`; `stop.ps1` kills it cleanly. We also document `taskkill /PID <pid> /T /F` as a manual fallback. |
+| `daily_run.sh` ETL pattern (stop API, run ETL, restart) is dropped | Reviewer scope says only start/restart/stop. The same effect is `.\scripts\stop.ps1; <etl>; .\scripts\start.ps1`. If ETL automation is still needed, add a separate `daily_run.ps1` in a follow-up — out of scope for this PR. |
+| NSSM is a third-party binary | Two options in the installer: `-UseNSSM` (default; pulls the MIT-licensed binary into `deploy\windows\bin\` if missing) or `-UseSC` (uses built-in `sc.exe` only — fewer features but no third-party dep). Operators choose. |
+| Windows graceful shutdown for celery workers | NSSM sends CTRL_BREAK_EVENT by default, which celery handles correctly (warm shutdown, finishes in-flight tasks within `AppStopMethodConsole` timeout, default 1500 ms — bumped to 30 s in the installer). |
 
-**Open questions for the reviewer**:
-1. Is Linux-only systemd acceptable for production, or do you also need an NSSM/Windows-service deliverable in `deploy/`?
-2. Should the dev scripts launch the worker in the same shell (as today via compose) or open a new terminal? My plan assumes background + log file, no terminal.
-3. Keep the `scripts/*.ps1` siblings, or drop PowerShell entirely now that the deploy target is bash + systemd? (Default in plan: keep them, mirroring the bash versions.)
-
-## Suggested execution order (when approved)
+## Suggested execution order
 
 1. Branch `claude/remove-docker` from `main`.
-2. Add new `scripts/_common.sh` primitives + rewrite `start.sh`/`stop.sh`/`status.sh`/`logs.sh`. Leave the docker scripts in place but unused so each step stays small.
-3. Rewrite `restart.sh`, `daily_run.sh`, `db.sh` to use the new primitives.
-4. Mirror the changes into the `.ps1` siblings.
+2. Add new `scripts/_Common.ps1` primitives (`Start-LgProcess`, `Stop-LgProcess`, `Test-LgProcessAlive`, `Test-PortListening`).
+3. Rewrite `start.ps1`, `restart.ps1`, `stop.ps1` against the new primitives. Verify locally on a Windows host.
+4. Update `db.ps1` to drop the `docker compose exec` fallback.
 5. Edit `.env.example`, `app/db/session.py:80`, `app/config.py` default URL.
-6. Add `deploy/systemd/*.service` + `deploy/systemd/README.md`.
+6. Add `deploy/windows/install-services.ps1`, `uninstall-services.ps1`, `README.md`.
 7. Delete `Dockerfile`, `docker-compose.yml`, `.dockerignore`.
-8. Edit `README.md`, `DEPLOYMENT.md`, `CHANGELOG.md`, `scripts/README.md`, `scripts/db/README.md`.
-9. Run the full verification checklist; fix any drift.
-10. Open a PR titled `Remove Docker — run everything natively`.
+8. Delete `scripts/*.sh` and `scripts/_common.sh`.
+9. Edit `README.md`, `DEPLOYMENT.md`, `CHANGELOG.md`, `scripts/README.md`, `scripts/db/README.md`.
+10. Run the verification checklist on a Windows host; fix any drift.
+11. Open a PR titled `Remove Docker — Windows-native deployment`.
