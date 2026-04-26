@@ -22,6 +22,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+
 from app.agents.playbooks import get_playbooks
 from app.agents.playbooks.compiler import compile_all
 from app.api.deps import require_api_key
@@ -30,6 +34,7 @@ from app.config import settings
 from app.core.reference_data import get_reference_data
 from app.db.session import engine, init_db
 from app.observability import PrometheusMiddleware, router as metrics_router
+from app.rate_limit import limiter
 
 
 # ---------------------------------------------------------------------------
@@ -226,6 +231,11 @@ def create_app() -> FastAPI:
         redoc_url="/redoc" if settings.debug else None,
         openapi_url="/openapi.json" if settings.debug else None,
     )
+
+    # Wire the limiter so @limiter.limit decorators in route modules work.
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_middleware(SlowAPIMiddleware)
 
     app.add_middleware(RequestIdMiddleware)
     app.add_middleware(PrometheusMiddleware)

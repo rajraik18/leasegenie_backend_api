@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.orm import AuditLog, FieldOverride, Tenant
 from app.schemas.models import (
-    AuditLogOut, FieldOverrideIn, RedFlag, TenantAbstractionOut,
+    AuditLogOut, FieldOverrideAck, FieldOverrideIn, RedFlag, TenantAbstractionOut,
 )
 from app.services.abstraction import build_abstraction, detect_red_flags
 
@@ -26,14 +26,20 @@ def get_abstraction(tenant_id: str, db: Session = Depends(get_db)) -> TenantAbst
         raise HTTPException(status_code=404, detail=str(exc))
 
 
-@router.patch("/{tenant_id}/fields/{field_id}", response_model=TenantAbstractionOut)
+@router.patch("/{tenant_id}/fields/{field_id}", response_model=FieldOverrideAck)
 def set_override(
     tenant_id: str,
     field_id: str,
     payload: FieldOverrideIn,
     db: Session = Depends(get_db),
-) -> TenantAbstractionOut:
-    """Set or clear a manual override for a field. Writes audit log."""
+) -> FieldOverrideAck:
+    """Set or clear a manual override for a field. Writes audit log.
+
+    Returns a lightweight `FieldOverrideAck`. Recomputing the full
+    abstraction grid here was the largest per-PATCH cost path; clients
+    that need the refreshed grid should call `GET /abstraction` after
+    a batch of edits.
+    """
     tenant = db.get(Tenant, tenant_id)
     if tenant is None:
         raise HTTPException(status_code=404, detail="tenant not found")
@@ -44,9 +50,10 @@ def set_override(
         .one_or_none()
     )
     old_value = existing.value if existing else None
+    action = "override"
 
     if payload.value is None:
-        # Clear override
+        action = "revert"
         if existing is not None:
             db.delete(existing)
             db.add(AuditLog(
@@ -81,7 +88,12 @@ def set_override(
         ))
 
     db.commit()
-    return build_abstraction(db, tenant_id)
+    return FieldOverrideAck(
+        tenant_id=tenant_id,
+        field_id=field_id,
+        action=action,
+        value=payload.value,
+    )
 
 
 @router.get("/{tenant_id}/audit", response_model=list[AuditLogOut])

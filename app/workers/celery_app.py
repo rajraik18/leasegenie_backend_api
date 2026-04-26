@@ -41,6 +41,17 @@ celery_app.conf.update(
             # Daily at 02:15 local time -- staggered to avoid concurrent disk churn.
             "schedule": crontab(hour=2, minute=15),
         },
+        "cleanup-stale-jobs": {
+            "task": "leasegenie.cleanup_stale_jobs",
+            # Hourly at :05 -- catches stuck queued/running rows fast.
+            "schedule": crontab(minute=5),
+        },
+        "cleanup-orphan-embeddings": {
+            "task": "leasegenie.cleanup_orphan_embeddings",
+            # Daily at 02:30. Drops clause_embeddings rows whose document_id
+            # no longer exists in the documents table.
+            "schedule": crontab(hour=2, minute=30),
+        },
     },
 )
 

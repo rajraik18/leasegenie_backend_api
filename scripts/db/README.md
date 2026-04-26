@@ -110,9 +110,30 @@ The HNSW index uses `m=16, ef_construction=64`. These defaults work well for ~10
 
 Both commands are non-destructive and safe to run on production.
 
+## Migrations
+
+Two layered tools:
+
+| When to use | Tool |
+|---|---|
+| **Additive change** (new table, new column with `NULL` allowed) | `.\scripts\db.ps1 migrate` -- runs the ORM `create_all`. Idempotent. No undo. |
+| **Non-additive change** (drop, type change, data migration, NOT NULL with default) | `.\scripts\db.ps1 alembic-revision -m "<msg>" --autogenerate` -- generates a versioned migration in `alembic/versions/` that you commit. Apply with `alembic-upgrade`, roll back with `alembic-downgrade -1`. |
+
+The Alembic baseline (`alembic/versions/0001_baseline.py`) is a no-op -- existing v3.0 deployments already have the schema, so the very first `alembic-upgrade` just stamps `0001` as applied. The next migration in the chain will be the first one with real DDL.
+
+```powershell
+# Daily flow for a schema change
+.\scripts\db.ps1 alembic-revision -m "add tenant.contact_email" --autogenerate
+# Edit alembic/versions/<id>_add_tenant_contact_email.py if needed
+.\scripts\db.ps1 alembic-upgrade
+.\scripts\db.ps1 alembic-current        # confirm the new revision is applied
+
+# Rollback if something goes sideways
+.\scripts\db.ps1 alembic-downgrade -1
+```
+
 ## What this does NOT do
 
-- **No Alembic-style migrations.** `migrate` only ADDS tables. Column type changes, drops, and data migrations require Alembic. Add Alembic to `requirements.txt` and run `alembic init alembic` if you need that — the existing scripts are designed not to conflict.
 - **No automated backups.** `.\scripts\db.ps1 backup` is a one-shot pg_dump to local disk. Production should use pg_basebackup, WAL archiving, or your managed-Postgres provider's snapshot feature.
 - **No replication setup.** Single-instance only. For HA, use Patroni / RDS Multi-AZ / Cloud SQL HA.
 - **No row-level security.** All authorization is enforced at the API layer.

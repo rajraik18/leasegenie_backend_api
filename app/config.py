@@ -75,6 +75,28 @@ class Settings(BaseSettings):
     upload_retention_days: int = 90
     export_retention_days: int = 30
 
+    # PDF safety -- reject PDFs whose page count exceeds this cap before
+    # pdfplumber.open() walks the document. 0 disables the check.
+    max_pdf_pages: int = 500
+
+    # Per-IP rate limits enforced on the expensive endpoints by slowapi.
+    # Strings use slowapi's natural-language form ("10/hour", "100/minute").
+    rate_limit_extract: str = "10/hour"
+    rate_limit_default: str = "100/minute"
+
+    # Stale-job sweeper (Celery beat). Marks ExtractionJob rows whose
+    # status is queued/running and whose created_at is older than this
+    # many hours as failed("job timed out"). 0 disables.
+    job_stale_ttl_hours: int = 24
+
+    # Orphan-embedding sweeper. Drops clause_embeddings rows whose
+    # document_id no longer exists in the documents table.
+    orphan_embedding_sweep_days: int = 1   # how often (rounded -- via beat schedule)
+
+    # pgvector query-time recall knob -- raise for higher recall at cost
+    # of latency. Must be >= ef_construction (defaults to 64 in schema.sql).
+    hnsw_ef_search: int = 80
+
     @property
     def is_sqlite(self) -> bool:
         return self.database_url.startswith("sqlite")

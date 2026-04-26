@@ -560,7 +560,10 @@ class PlaybookExecutor:
         # Needs review if samples disagreed on value (2 distinct values from 3 samples)
         needs_review = len(value_counts) > 1 and value_agreement < len(winning_samples)
 
-        logger.info(
+        # Voting trace logs the chosen extracted value, which may be a
+        # rent amount, tenant name, or other PII. Keep at DEBUG so it only
+        # appears when an operator opts in via DEBUG=true in .env.
+        logger.debug(
             "voting[%s/%s] answers=%s value_agreement=%d/%d chosen=%s%s",
             playbook.field_id, q.id, answer_counts, value_agreement,
             len(winning_samples), chosen_value,

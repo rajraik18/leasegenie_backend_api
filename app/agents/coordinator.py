@@ -71,7 +71,17 @@ class AgentFieldResult:
 
 
 class Coordinator:
-    """Multi-agent coordinator — runs all five specialists for a tenant."""
+    """Multi-agent coordinator — runs all five specialists for a tenant.
+
+    Concurrency note: a Coordinator instance is intended to live for the
+    duration of ONE extraction task. The DocumentContext built in
+    `_build_context` (BM25 corpus, classifications, ocr cache) is sized
+    for that single tenant and is not safe to reuse across tenants — the
+    BM25 index would mix clauses from different leases. The current call
+    site in app/services/pipeline.py respects this by instantiating a
+    fresh Coordinator per call; preserve that pattern in any future
+    refactor.
+    """
 
     def __init__(
         self,

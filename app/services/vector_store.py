@@ -56,6 +56,8 @@ class VectorStore(Protocol):
 
     def delete_document(self, document_id: str) -> int: ...
 
+    def delete_orphans(self) -> int: ...
+
 
 # ---------------------------------------------------------------------------
 # pgvector-backed implementation
@@ -133,8 +135,13 @@ class PgVectorStore:
                 "char_end": c.end_offset,
             })
 
-        with self._engine.begin() as conn:
-            conn.execute(sql, rows)
+        from app.services._retry import with_backoff
+
+        def _do_upsert():
+            with self._engine.begin() as conn:
+                conn.execute(sql, rows)
+
+        with_backoff(_do_upsert, label="pgvector.upsert")
         logger.info("upserted %d clauses for document %s", len(rows), document_id)
         return len(rows)
 
@@ -191,8 +198,21 @@ class PgVectorStore:
             LIMIT :top_k
         """)
 
-        with self._engine.connect() as conn:
-            rows = conn.execute(sql, params).fetchall()
+        from app.config import settings as _settings
+        from app.services._retry import with_backoff
+        from sqlalchemy import text as _text
+
+        ef = _settings.hnsw_ef_search
+
+        def _do_search():
+            with self._engine.connect() as conn:
+                # Tune query-time recall. Must run inside the same
+                # connection / transaction as the SELECT to take effect.
+                if ef and ef > 0:
+                    conn.execute(_text(f"SET LOCAL hnsw.ef_search = {int(ef)}"))
+                return conn.execute(sql, params).fetchall()
+
+        rows = with_backoff(_do_search, label="pgvector.search")
 
         return [
             VectorHit(
@@ -214,13 +234,39 @@ class PgVectorStore:
     def delete_document(self, document_id: str) -> int:
         from sqlalchemy import text
 
-        with self._engine.begin() as conn:
-            result = conn.execute(
-                text("DELETE FROM clause_embeddings WHERE document_id = :d"),
-                {"d": document_id},
-            )
+        from app.services._retry import with_backoff
+
+        def _do_delete():
+            with self._engine.begin() as conn:
+                return conn.execute(
+                    text("DELETE FROM clause_embeddings WHERE document_id = :d"),
+                    {"d": document_id},
+                )
+
+        result = with_backoff(_do_delete, label="pgvector.delete_document")
         rowcount = result.rowcount or 0
         logger.info("deleted %d clauses for document %s", rowcount, document_id)
+        return rowcount
+
+    # ------------------------------------------------------------------
+    def delete_orphans(self) -> int:
+        """Drop clause_embeddings rows whose document_id no longer exists in
+        the documents table. Called from the orphan-sweeper beat task."""
+        from sqlalchemy import text
+
+        from app.services._retry import with_backoff
+
+        def _do_delete():
+            with self._engine.begin() as conn:
+                return conn.execute(text(
+                    "DELETE FROM clause_embeddings "
+                    "WHERE document_id NOT IN (SELECT id FROM documents)"
+                ))
+
+        result = with_backoff(_do_delete, label="pgvector.delete_orphans")
+        rowcount = result.rowcount or 0
+        if rowcount:
+            logger.info("dropped %d orphan clause_embeddings rows", rowcount)
         return rowcount
 
 
@@ -241,6 +287,9 @@ class _NoOpVectorStore:
         return []
 
     def delete_document(self, document_id: str) -> int:
+        return 0
+
+    def delete_orphans(self) -> int:
         return 0
 
 

@@ -9,18 +9,25 @@
 
 .PARAMETER Command
     Subcommand:
-        init        Create extensions + tables (idempotent)
-        migrate     Apply forward-only schema additions (via ORM)
-        upgrade-sql Run pending raw-SQL migrations from scripts/db/migrations/
-        drop        Drop all tables (asks confirmation)
-        reset       drop + init (asks confirmation)
-        sql         Run scripts/db/schema.sql directly via psql
-        status      Row counts + pgvector version
-        check       Verify schema matches ORM
-        pgvector    Verify pgvector extension is functional
-        seed        Insert demo project/property/tenant
-        shell       Open psql REPL on the host
-        backup      pg_dump to .\backups\leasegenie_<timestamp>.sql
+        init                Create extensions + tables (idempotent)
+        migrate             Apply forward-only schema additions (via ORM)
+        upgrade-sql         Run pending raw-SQL migrations from scripts/db/migrations/
+        drop                Drop all tables (asks confirmation)
+        reset               drop + init (asks confirmation)
+        sql                 Run scripts/db/schema.sql directly via psql
+        status              Row counts + pgvector version
+        check               Verify schema matches ORM
+        pgvector            Verify pgvector extension is functional
+        seed                Insert demo project/property/tenant
+        shell               Open psql REPL on the host
+        backup              pg_dump to .\backups\leasegenie_<timestamp>.sql
+
+    Alembic-based migrations (recommended for non-additive schema changes):
+        alembic-upgrade     Apply all pending Alembic migrations (= upgrade head)
+        alembic-downgrade <rev>  Roll back to <rev> (e.g. -1, base, <id>)
+        alembic-revision -m "<msg>" [--autogenerate]  Create a new migration
+        alembic-current     Show currently-applied revision
+        alembic-history     List the migration chain
 
 .EXAMPLE
     .\scripts\db.ps1 init
@@ -202,6 +209,47 @@ switch ($Command.ToLower()) {
         }
         $sz = '{0:N1} MB' -f ((Get-Item $out).Length / 1MB)
         Write-LgOk "Backup saved: $out ($sz)"
+    }
+
+    'alembic-upgrade' {
+        # Apply all pending migrations from alembic/versions/.
+        # Equivalent to: alembic upgrade head
+        if (-not (Test-PostgresReachable)) {
+            Stop-WithError "Host Postgres not reachable at ${pgHost}:${pgPort}"
+        }
+        $py = Get-VenvPython
+        Write-LgInfo "Running: alembic upgrade head"
+        & $py -m alembic upgrade head
+    }
+
+    'alembic-downgrade' {
+        if (-not $ExtraArgs -or $ExtraArgs.Count -eq 0) {
+            Stop-WithError "Usage: db.ps1 alembic-downgrade <revision>  (e.g. -1, base, abc12345)"
+        }
+        $py = Get-VenvPython
+        Write-LgInfo "Running: alembic downgrade $($ExtraArgs[0])"
+        & $py -m alembic downgrade $ExtraArgs[0]
+    }
+
+    'alembic-revision' {
+        # Generate a new migration. Pass the message as -m "<message>".
+        # Use --autogenerate to compare ORM metadata to the live schema.
+        if (-not $ExtraArgs -or $ExtraArgs.Count -eq 0) {
+            Stop-WithError "Usage: db.ps1 alembic-revision -m '<message>' [--autogenerate]"
+        }
+        $py = Get-VenvPython
+        Write-LgInfo "Running: alembic revision $($ExtraArgs -join ' ')"
+        & $py -m alembic revision @ExtraArgs
+    }
+
+    'alembic-current' {
+        $py = Get-VenvPython
+        & $py -m alembic current
+    }
+
+    'alembic-history' {
+        $py = Get-VenvPython
+        & $py -m alembic history --verbose
     }
 
     default {

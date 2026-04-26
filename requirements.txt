@@ -29,6 +29,12 @@ redis==5.1.1
 # Observability — Prometheus /metrics endpoint
 prometheus-client==0.21.0
 
+# Rate limiting (per-IP, configured via .env::RATE_LIMIT_*)
+slowapi==0.1.9
+
+# Schema migrations
+alembic==1.13.3
+
 # Local LLM
 ollama==0.3.3
 
