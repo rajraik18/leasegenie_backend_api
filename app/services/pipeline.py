@@ -65,6 +65,17 @@ def run_extraction_for_tenant(
 
     for d in docs:
         d.ocr_status = "ocr_in_progress"
+
+    # Wipe the per-document field_value slate so a re-run that extracts
+    # fewer fields than a prior run doesn't leave stale rows behind.
+    # Per-field upserts in _persist_field_value() will refill them.
+    doc_ids = [d.id for d in docs]
+    db.execute(
+        delete(FieldValue).where(
+            FieldValue.tenant_id == tenant_id,
+            FieldValue.document_id.in_(doc_ids),
+        )
+    )
     db.commit()
 
     doc_inputs = [

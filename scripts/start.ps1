@@ -109,11 +109,17 @@ try {
     Write-LgBanner 'Phase 3 -- launching api + worker'
     $py = Get-VenvPython
     $apiPort = Get-EnvValue -Key 'API_PORT' -Default '8000'
+    # Bind to loopback by default. A reverse proxy (IIS / Caddy / nginx)
+    # terminates TLS and forwards to 127.0.0.1:$apiPort. Set API_HOST=0.0.0.0
+    # in .env only if you intentionally want to expose uvicorn directly.
+    $apiHost = Get-EnvValue -Key 'API_HOST' -Default '127.0.0.1'
+    $workerPool        = Get-EnvValue -Key 'WORKER_POOL'        -Default 'threads'
+    $workerConcurrency = Get-EnvValue -Key 'WORKER_CONCURRENCY' -Default '4'
 
     $apiArgs = @(
         '-m', 'uvicorn',
         'app.main:app',
-        '--host', '0.0.0.0',
+        '--host', $apiHost,
         '--port', $apiPort
     )
     Start-LgProcess -Name 'api' -FilePath $py -ArgumentList $apiArgs -Mode $mode | Out-Null
@@ -123,8 +129,8 @@ try {
         '-A', 'app.workers.celery_app:celery_app',
         'worker',
         '--loglevel=info',
-        '--concurrency=2',
-        '-P', 'solo'
+        "--concurrency=$workerConcurrency",
+        '-P', $workerPool
     )
     Start-LgProcess -Name 'worker' -FilePath $py -ArgumentList $workerArgs -Mode $mode | Out-Null
 

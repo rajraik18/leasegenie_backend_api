@@ -55,11 +55,14 @@ try {
     Write-LgBanner 'Launching api + worker'
     $py = Get-VenvPython
     $apiPort = Get-EnvValue -Key 'API_PORT' -Default '8000'
+    $apiHost = Get-EnvValue -Key 'API_HOST' -Default '127.0.0.1'
+    $workerPool        = Get-EnvValue -Key 'WORKER_POOL'        -Default 'threads'
+    $workerConcurrency = Get-EnvValue -Key 'WORKER_CONCURRENCY' -Default '4'
 
-    $apiArgs = @('-m', 'uvicorn', 'app.main:app', '--host', '0.0.0.0', '--port', $apiPort)
+    $apiArgs = @('-m', 'uvicorn', 'app.main:app', '--host', $apiHost, '--port', $apiPort)
     Start-LgProcess -Name 'api' -FilePath $py -ArgumentList $apiArgs -Mode $mode | Out-Null
 
-    $workerArgs = @('-m', 'celery', '-A', 'app.workers.celery_app:celery_app', 'worker', '--loglevel=info', '--concurrency=2', '-P', 'solo')
+    $workerArgs = @('-m', 'celery', '-A', 'app.workers.celery_app:celery_app', 'worker', '--loglevel=info', "--concurrency=$workerConcurrency", '-P', $workerPool)
     Start-LgProcess -Name 'worker' -FilePath $py -ArgumentList $workerArgs -Mode $mode | Out-Null
 
     # ---- Smoke ----

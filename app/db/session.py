@@ -8,6 +8,8 @@ Engine options (connection pooling, JIT off for predictable small-query
 latency, application_name tag) are applied automatically based on the
 DATABASE_URL scheme.
 """
+import re
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
 
@@ -16,6 +18,11 @@ from app.config import settings
 
 class Base(DeclarativeBase):
     pass
+
+
+def _redact_url(raw: str) -> str:
+    """Mask the password segment of a DSN before logging it."""
+    return re.sub(r"(://[^:/@]+):[^@/]*@", r"\1:***@", raw)
 
 
 def _make_engine():
@@ -38,8 +45,8 @@ def _make_engine():
         return create_engine(
             settings.database_url,
             pool_pre_ping=True,
-            pool_size=10,
-            max_overflow=20,
+            pool_size=settings.db_pool_size,
+            max_overflow=settings.db_max_overflow,
             connect_args={
                 "application_name": "leasegenie-api",
                 "options": "-c jit=off",
@@ -48,7 +55,7 @@ def _make_engine():
         )
 
     raise RuntimeError(
-        f"Unsupported DATABASE_URL scheme: {settings.database_url!r}. "
+        f"Unsupported DATABASE_URL scheme: {_redact_url(settings.database_url)!r}. "
         "Only PostgreSQL (postgresql+psycopg2://) and SQLite (sqlite:///) "
         "are supported. See .env.example."
     )

@@ -16,6 +16,16 @@ celery_app.conf.update(
     result_serializer="json",
     accept_content=["json"],
     task_track_started=True,
+    # Reliability — survive worker crashes and don't stall the queue forever.
+    task_acks_late=True,
+    task_reject_on_worker_lost=True,
+    task_time_limit=settings.celery_task_time_limit,
+    task_soft_time_limit=settings.celery_task_soft_time_limit,
+    # Bound result-backend growth.
+    result_expires=settings.celery_result_expires_seconds,
+    # Don't prefetch lots of tasks per worker — keeps long extractions from
+    # being held behind a busy worker.
+    worker_prefetch_multiplier=1,
 )
 
 # Import tasks so Celery registers them

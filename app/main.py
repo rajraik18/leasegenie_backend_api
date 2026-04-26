@@ -13,23 +13,88 @@ Startup:
 from __future__ import annotations
 
 import logging
+import uuid
+from contextvars import ContextVar
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.agents.playbooks import get_playbooks
 from app.agents.playbooks.compiler import compile_all
+from app.api.deps import require_api_key
 from app.api.v1 import abstraction, documents, extract_pdf, extraction, fields, orders, playbooks, schemas
 from app.config import settings
 from app.core.reference_data import get_reference_data
-from app.db.session import init_db
+from app.db.session import engine, init_db
 
-logging.basicConfig(
-    level=logging.INFO if not settings.debug else logging.DEBUG,
-    format="%(asctime)s %(levelname)-7s %(name)s: %(message)s",
-)
+
+# ---------------------------------------------------------------------------
+# Logging — JSON formatter that includes request_id from a contextvar.
+# ---------------------------------------------------------------------------
+
+_REQUEST_ID: ContextVar[str] = ContextVar("request_id", default="-")
+
+
+class _JsonFormatter(logging.Formatter):
+    """Minimal structured-log formatter. No external dep."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        import json
+
+        payload = {
+            "ts": self.formatTime(record, "%Y-%m-%dT%H:%M:%S"),
+            "level": record.levelname,
+            "logger": record.name,
+            "msg": record.getMessage(),
+            "request_id": _REQUEST_ID.get(),
+        }
+        if record.exc_info:
+            payload["exc"] = self.formatException(record.exc_info)
+        return json.dumps(payload, default=str)
+
+
+def _configure_logging() -> None:
+    root = logging.getLogger()
+    # Strip any pre-existing handlers (e.g. uvicorn's basic config).
+    for h in list(root.handlers):
+        root.removeHandler(h)
+    handler = logging.StreamHandler()
+    if settings.debug:
+        handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)-7s [%(name)s] [rid=%(request_id)s] %(message)s"))
+        # In debug mode we also stamp request_id via a Filter so plain text
+        # formatting can include it.
+        handler.addFilter(_RequestIdFilter())
+    else:
+        handler.setFormatter(_JsonFormatter())
+    root.addHandler(handler)
+    root.setLevel(logging.DEBUG if settings.debug else logging.INFO)
+
+
+class _RequestIdFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        record.request_id = _REQUEST_ID.get()
+        return True
+
+
+_configure_logging()
 logger = logging.getLogger(__name__)
+
+
+class RequestIdMiddleware(BaseHTTPMiddleware):
+    """Stamp each request with an X-Request-ID and surface it in logs."""
+
+    async def dispatch(self, request: Request, call_next):
+        rid = request.headers.get("X-Request-ID") or uuid.uuid4().hex[:12]
+        token = _REQUEST_ID.set(rid)
+        try:
+            response = await call_next(request)
+        finally:
+            _REQUEST_ID.reset(token)
+        response.headers["X-Request-ID"] = rid
+        return response
 
 
 def _ensure_playbooks_compiled() -> None:
@@ -43,6 +108,13 @@ def _ensure_playbooks_compiled() -> None:
     logger.info("Compiled playbooks missing — compiling from %s", source_dir)
     result = compile_all(source_dir, compiled_dir)
     logger.info("Compiled %d playbooks into %s", result["count"], compiled_dir)
+
+
+def _redact_url(raw: str) -> str:
+    """Return the URL with any user/password fragment masked."""
+    import re
+
+    return re.sub(r"(://[^:/@]+):[^@/]*@", r"\1:***@", raw)
 
 
 def create_app() -> FastAPI:
@@ -121,7 +193,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title=settings.project_name,
-        version="2.0.0",
+        version="3.0.0",
         description=(
             "**Multi-agent lease data extraction API.**\n\n"
             "Five specialist agents (Basic Info, Financial, Reimbursements, "
@@ -147,27 +219,37 @@ def create_app() -> FastAPI:
         license_info={
             "name": "Proprietary",
         },
-        docs_url="/docs",
-        redoc_url="/redoc",
+        # OpenAPI UI is only exposed in debug mode. Production deployments
+        # set DEBUG=false in .env so /docs and /redoc return 404.
+        docs_url="/docs" if settings.debug else None,
+        redoc_url="/redoc" if settings.debug else None,
+        openapi_url="/openapi.json" if settings.debug else None,
     )
 
+    app.add_middleware(RequestIdMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_allow_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        # No endpoint uses cookie-based session credentials, so credentialed
+        # CORS isn't needed. Keeping it false also avoids the "wildcard +
+        # credentials" CSRF anti-pattern.
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "X-API-Key", "X-Request-ID"],
+        expose_headers=["X-Request-ID"],
     )
 
     prefix = settings.api_v1_prefix
-    app.include_router(orders.router, prefix=prefix)
-    app.include_router(documents.router, prefix=prefix)
-    app.include_router(extraction.router, prefix=prefix)
-    app.include_router(abstraction.router, prefix=prefix)
-    app.include_router(fields.router, prefix=prefix)
-    app.include_router(playbooks.router, prefix=prefix)
-    app.include_router(extract_pdf.router, prefix=prefix)
-    app.include_router(schemas.router, prefix=prefix)
+    auth_dep = [Depends(require_api_key)]
+
+    app.include_router(orders.router,      prefix=prefix, dependencies=auth_dep)
+    app.include_router(documents.router,   prefix=prefix, dependencies=auth_dep)
+    app.include_router(extraction.router,  prefix=prefix, dependencies=auth_dep)
+    app.include_router(abstraction.router, prefix=prefix, dependencies=auth_dep)
+    app.include_router(fields.router,      prefix=prefix, dependencies=auth_dep)
+    app.include_router(playbooks.router,   prefix=prefix, dependencies=auth_dep)
+    app.include_router(extract_pdf.router, prefix=prefix, dependencies=auth_dep)
+    app.include_router(schemas.router,     prefix=prefix, dependencies=auth_dep)
 
     @app.on_event("startup")
     def _startup() -> None:
@@ -176,16 +258,22 @@ def create_app() -> FastAPI:
         _ensure_playbooks_compiled()
         playbooks = get_playbooks()
         logger.info(
-            "LeaseGenie ready | fields=%d | playbooks=%d | extractor=%s | ollama=%s model=%s",
+            "LeaseGenie ready | fields=%d | playbooks=%d | extractor=%s | model=%s | auth=%s",
             len(ref.fields),
             len(playbooks),
             settings.extractor_backend,
-            settings.ollama_base_url,
             settings.ollama_model,
+            "ON" if settings.api_key else "OFF",
         )
+        if not settings.api_key:
+            logger.warning(
+                "API_KEY is not set -- all endpoints are unauthenticated. "
+                "This is OK for local development only.",
+            )
 
     @app.get("/health", tags=["meta"])
     def health() -> dict:
+        """Liveness probe. Always returns 200 if the process is up."""
         ref = get_reference_data()
         playbooks = get_playbooks()
         by_cat: dict[str, int] = {}
@@ -198,8 +286,36 @@ def create_app() -> FastAPI:
             "playbooks_by_category": by_cat,
             "extractor_backend": settings.extractor_backend,
             "ollama_model": settings.ollama_model,
-            "ollama_base_url": settings.ollama_base_url,
         }
+
+    @app.get("/readiness", tags=["meta"])
+    def readiness() -> dict:
+        """Readiness probe. Verifies Postgres + Ollama are reachable."""
+        from fastapi import HTTPException
+        problems: list[str] = []
+
+        # Postgres
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+        except Exception as exc:
+            problems.append(f"db: {exc.__class__.__name__}")
+
+        # Ollama (only when ollama backend is selected)
+        if settings.extractor_backend == "ollama":
+            try:
+                import urllib.request
+
+                req = urllib.request.Request(f"{settings.ollama_base_url.rstrip('/')}/api/tags")
+                with urllib.request.urlopen(req, timeout=3) as resp:
+                    if resp.status != 200:
+                        problems.append(f"ollama: status {resp.status}")
+            except Exception as exc:
+                problems.append(f"ollama: {exc.__class__.__name__}")
+
+        if problems:
+            raise HTTPException(status_code=503, detail={"ready": False, "problems": problems})
+        return {"ready": True}
 
     return app
 

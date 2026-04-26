@@ -172,20 +172,32 @@ Write-Host "[*] Backend:      $(if ($UseNSSM) { 'NSSM' } else { 'sc.exe' })"
 Stop-AndRemove -Name $workerSvc
 Stop-AndRemove -Name $apiSvc
 
+# --- Resolve API_PORT, API_HOST, WORKER_POOL, WORKER_CONCURRENCY from .env ---
+function Get-EnvOrDefault {
+    param([string]$Key, [string]$Default)
+    $line = $envLines | Where-Object { $_ -match "^\s*${Key}\s*=" } | Select-Object -First 1
+    if ($line) {
+        return (($line -split '=', 2)[1].Trim().Trim('"').Trim("'"))
+    }
+    return $Default
+}
+$apiPort = Get-EnvOrDefault 'API_PORT' '8000'
+# Bind to loopback by default. Reverse proxy (IIS / Caddy / nginx) terminates
+# TLS and forwards to 127.0.0.1:$apiPort. Override with API_HOST=0.0.0.0 in
+# .env if you really want to expose uvicorn directly.
+$apiHost           = Get-EnvOrDefault 'API_HOST'           '127.0.0.1'
+$workerPool        = Get-EnvOrDefault 'WORKER_POOL'        'threads'
+$workerConcurrency = Get-EnvOrDefault 'WORKER_CONCURRENCY' '4'
+
 if ($UseNSSM) {
     $nssm = Get-NssmExe
 
-    # API service
-    $apiPort = '8000'
-    $portLine = $envLines | Where-Object { $_ -match '^\s*API_PORT\s*=' } | Select-Object -First 1
-    if ($portLine) { $apiPort = ($portLine -split '=', 2)[1].Trim() }
-
-    & $nssm install $apiSvc $venvPython '-m' 'uvicorn' 'app.main:app' '--host' '0.0.0.0' '--port' $apiPort
+    & $nssm install $apiSvc $venvPython '-m' 'uvicorn' 'app.main:app' '--host' $apiHost '--port' $apiPort
     & $nssm set $apiSvc AppDirectory $repoRoot
     & $nssm set $apiSvc AppStdout $apiLog
     & $nssm set $apiSvc AppStderr $apiLog
     & $nssm set $apiSvc AppRotateFiles 1
-    & $nssm set $apiSvc AppRotateBytes 10485760
+    & $nssm set $apiSvc AppRotateBytes 52428800       # 50 MB
     & $nssm set $apiSvc AppEnvironmentExtra ([string]::Join("`n", $envPairs))
     & $nssm set $apiSvc Start SERVICE_AUTO_START
     & $nssm set $apiSvc AppExit Default Restart
@@ -194,12 +206,12 @@ if ($UseNSSM) {
     & $nssm set $apiSvc Description 'LeaseGenie FastAPI server (uvicorn).'
 
     # Worker service
-    & $nssm install $workerSvc $venvPython '-m' 'celery' '-A' 'app.workers.celery_app:celery_app' 'worker' '--loglevel=info' '--concurrency=2' '-P' 'solo'
+    & $nssm install $workerSvc $venvPython '-m' 'celery' '-A' 'app.workers.celery_app:celery_app' 'worker' '--loglevel=info' "--concurrency=$workerConcurrency" '-P' $workerPool
     & $nssm set $workerSvc AppDirectory $repoRoot
     & $nssm set $workerSvc AppStdout $workerLog
     & $nssm set $workerSvc AppStderr $workerLog
     & $nssm set $workerSvc AppRotateFiles 1
-    & $nssm set $workerSvc AppRotateBytes 10485760
+    & $nssm set $workerSvc AppRotateBytes 52428800    # 50 MB
     & $nssm set $workerSvc AppEnvironmentExtra ([string]::Join("`n", $envPairs))
     & $nssm set $workerSvc Start SERVICE_AUTO_START
     & $nssm set $workerSvc AppExit Default Restart
@@ -226,8 +238,8 @@ if ($UseNSSM) {
     # console environment, so the python process must read .env itself
     # (which it does via SettingsConfigDict env_file=".env"). We just need
     # to make sure the working directory is the repo root so .env is found.
-    $apiBin = "`"$venvPython`" -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
-    $workerBin = "`"$venvPython`" -m celery -A app.workers.celery_app:celery_app worker --loglevel=info --concurrency=2 -P solo"
+    $apiBin = "`"$venvPython`" -m uvicorn app.main:app --host $apiHost --port $apiPort"
+    $workerBin = "`"$venvPython`" -m celery -A app.workers.celery_app:celery_app worker --loglevel=info --concurrency=$workerConcurrency -P $workerPool"
     sc.exe create $apiSvc binPath= "cmd.exe /c cd /d `"$repoRoot`" && $apiBin >> `"$apiLog`" 2>&1" start= auto DisplayName= 'LeaseGenie API' | Out-Null
     sc.exe create $workerSvc binPath= "cmd.exe /c cd /d `"$repoRoot`" && $workerBin >> `"$workerLog`" 2>&1" start= auto DisplayName= 'LeaseGenie Worker' depend= $apiSvc | Out-Null
     sc.exe failure $apiSvc reset= 60 actions= restart/5000/restart/5000/restart/5000 | Out-Null
@@ -238,9 +250,30 @@ if ($UseNSSM) {
     Start-Service $workerSvc
 }
 
+# --- Smoke test --------------------------------------------------------------
 Write-Host ''
-Write-Host '[OK] Services installed and started.' -ForegroundColor Green
+Write-Host '[*] Waiting for /health ...'
+$healthHost = if ($apiHost -eq '0.0.0.0') { 'localhost' } else { $apiHost }
+$healthUrl = "http://$healthHost`:$apiPort/health"
+$deadline = (Get-Date).AddSeconds(90)
+$healthy = $false
+while ((Get-Date) -lt $deadline) {
+    try {
+        $resp = Invoke-WebRequest -Uri $healthUrl -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop
+        if ($resp.StatusCode -eq 200) { $healthy = $true; break }
+    } catch {}
+    Start-Sleep -Seconds 2
+}
+if (-not $healthy) {
+    Write-Host "[X] Service started but $healthUrl did not respond 200 within 90s." -ForegroundColor Red
+    Write-Host "    Inspect: Get-Content $apiLog -Tail 60"
+    exit 2
+}
+
+Write-Host ''
+Write-Host '[OK] Services installed, started, and /health verified.' -ForegroundColor Green
 Write-Host "     Status:    Get-Service $apiSvc, $workerSvc"
 Write-Host "     API logs:  Get-Content $apiLog -Tail 40"
 Write-Host "     Worker:    Get-Content $workerLog -Tail 40"
 Write-Host "     Uninstall: .\deploy\windows\uninstall-services.ps1"
+Write-Host "     Reverse-proxy guide: .\deploy\windows\REVERSE_PROXY.md"
