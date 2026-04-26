@@ -78,7 +78,11 @@ class Coordinator:
         client: OllamaAgentClient | None = None,
         enable_reconciliation: bool = True,
     ):
-        self.client = client or OllamaAgentClient()
+        if client is None:
+            from app.agents.ollama_client import get_agent_client
+
+            client = get_agent_client()
+        self.client = client
         self.enable_reconciliation = enable_reconciliation
 
     def run(

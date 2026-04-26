@@ -4,6 +4,10 @@ We use the official `ollama` Python client. Qwen2.5, Llama 3.1+, and Hermes3
 all support OpenAI-style tool calls natively through Ollama. When a model
 doesn't support tool calls, we fall back to a JSON-mode protocol where the
 model emits `{"tool": "...", "arguments": {...}}` objects.
+
+If `settings.extractor_backend == "stub"` the factory `get_agent_client`
+returns a `StubAgentClient` instead, so the pipeline can run end-to-end
+without an LLM in the loop (used by E2E tests and offline smoke runs).
 """
 from __future__ import annotations
 
@@ -11,7 +15,7 @@ import json
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, Protocol
 
 from app.config import settings
 
@@ -200,3 +204,37 @@ def _safe_loads(s: str) -> Any:
             except json.JSONDecodeError:
                 return None
         return None
+
+
+# ---------------------------------------------------------------------------
+# Factory — pick the real client or the stub based on config.
+# ---------------------------------------------------------------------------
+
+class AgentClient(Protocol):
+    """Structural type the Coordinator needs.
+
+    Both `OllamaAgentClient` and `app.agents.stub_client.StubAgentClient`
+    satisfy this protocol.
+    """
+
+    def chat(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None = None,
+        temperature: float | None = None,
+    ) -> AgentStep: ...
+
+    def chat_json(
+        self,
+        messages: list[dict[str, Any]],
+        temperature: float | None = None,
+    ) -> dict[str, Any]: ...
+
+
+def get_agent_client() -> AgentClient:
+    """Return the agent client implementation chosen by EXTRACTOR_BACKEND."""
+    backend = (settings.extractor_backend or "ollama").lower()
+    if backend == "stub":
+        from app.agents.stub_client import StubAgentClient
+        return StubAgentClient()
+    return OllamaAgentClient()

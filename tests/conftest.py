@@ -1,80 +1,78 @@
 """Shared pytest fixtures.
 
-The `client` fixture wires a FastAPI TestClient against an isolated SQLite
-DB and a temporary upload directory. Auth is disabled (API_KEY unset) so
-end-to-end tests can talk to all routes.
-
-Module reloading is done once at session scope. Per-test isolation is
-achieved by truncating the tables between tests instead of recreating the
-engine — that way every imported module continues to see the same
-SessionLocal / engine instance.
+Env vars are set in `pytest_configure` so `app.config.Settings` reads them
+on the very first import of `app.*` — no module reloading needed. The
+`client` fixture wires a FastAPI TestClient and truncates tables between
+tests so each one starts from a clean slate.
 """
 from __future__ import annotations
 
-import importlib
 import os
 from pathlib import Path
 
 import pytest
 
 
-@pytest.fixture(scope="session")
-def _app_session(tmp_path_factory):
-    """Configure the app once per test session."""
-    base = tmp_path_factory.mktemp("leasegenie")
-    db_path = base / "test.db"
-    upload_dir = base / "uploads"
-    export_dir = base / "exports"
-    upload_dir.mkdir()
-    export_dir.mkdir()
+_TMP_ROOT = Path("/tmp/leasegenie-test")
 
-    os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
-    os.environ["UPLOAD_DIR"] = str(upload_dir)
-    os.environ["EXPORT_DIR"] = str(export_dir)
-    os.environ["EXTRACTOR_BACKEND"] = "stub"
-    os.environ["CELERY_TASK_ALWAYS_EAGER"] = "true"
-    os.environ["DEBUG"] = "true"
+
+def pytest_configure(config):
+    """Mutate the env BEFORE any `app.*` module is imported."""
+    _TMP_ROOT.mkdir(parents=True, exist_ok=True)
+    db_path = _TMP_ROOT / "test.db"
+    upload_dir = _TMP_ROOT / "uploads"
+    export_dir = _TMP_ROOT / "exports"
+    upload_dir.mkdir(exist_ok=True)
+    export_dir.mkdir(exist_ok=True)
+
+    # Drop any leftover SQLite from a previous run so each session starts fresh.
+    if db_path.exists():
+        db_path.unlink()
+
+    os.environ.setdefault("DATABASE_URL", f"sqlite:///{db_path}")
+    os.environ.setdefault("UPLOAD_DIR", str(upload_dir))
+    os.environ.setdefault("EXPORT_DIR", str(export_dir))
+    os.environ.setdefault("EXTRACTOR_BACKEND", "stub")
+    os.environ.setdefault("CELERY_TASK_ALWAYS_EAGER", "true")
+    # Use in-memory broker / result backend so eager-mode .delay() never
+    # touches the network even if eager mode somehow flips off.
+    os.environ.setdefault("CELERY_BROKER_URL", "memory://")
+    os.environ.setdefault("CELERY_RESULT_BACKEND", "cache+memory://")
+    os.environ.setdefault("DEBUG", "true")
     os.environ.pop("API_KEY", None)
 
-    # Pick up the env above. Reload happens BEFORE TestClient imports the app.
-    import app.config as _config
-    importlib.reload(_config)
-    import app.db.session as _session
-    importlib.reload(_session)
-    import app.api.deps as _deps
-    importlib.reload(_deps)
 
-    # Routers / workers / services capture references to deps + SessionLocal
-    # at import time. Reload them so they bind to the new instances.
-    for name in (
-        "app.api.v1.orders",
-        "app.api.v1.documents",
-        "app.api.v1.extraction",
-        "app.api.v1.abstraction",
-        "app.api.v1.fields",
-        "app.api.v1.playbooks",
-        "app.api.v1.extract_pdf",
-        "app.api.v1.schemas",
-        "app.workers.tasks",
-        "app.services.pipeline",
-        "app.services.doc_indexer",
-        "app.services.vector_store",
-    ):
-        try:
-            importlib.reload(importlib.import_module(name))
-        except Exception:
-            pass
+@pytest.fixture(scope="session")
+def _app_session():
+    """Initialise the app once per session.
 
-    import app.main as _main
-    importlib.reload(_main)
+    By the time this fixture runs, `pytest_configure` has set the env so
+    importing `app.main` is enough to wire everything correctly.
 
-    _session.init_db()
+    We bypass Celery's eager-mode plumbing by monkey-patching `.delay()`
+    on the two tasks to call them synchronously. This avoids any dependence
+    on `task_always_eager` being correctly applied to the right Celery app
+    instance during reloads, which has been brittle across Celery versions.
+    """
+    import app.db.session as session_module
+    import app.main as main_module
+    import app.workers.tasks as tasks_module
 
-    return {
-        "session_module": _session,
-        "main_module": _main,
-        "config_module": _config,
-    }
+    def _sync_delay(_task):
+        def _runner(*args, **kwargs):
+            try:
+                return _task(*args, **kwargs)
+            except Exception:
+                # Mirror eager_propagates=False so the API caller sees a
+                # successful enqueue even if the task body raised.
+                pass
+        return _runner
+
+    tasks_module.extract_tenant_task.delay = _sync_delay(tasks_module.extract_tenant_task)
+    tasks_module.index_document_task.delay = _sync_delay(tasks_module.index_document_task)
+
+    session_module.init_db()
+    return {"session_module": session_module, "main_module": main_module}
 
 
 @pytest.fixture()
